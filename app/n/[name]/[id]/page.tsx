@@ -16,7 +16,7 @@ export default async function NotePage({
   if (!note || note.owner !== owner) notFound();
 
   return (
-    <main className="wrap" style={{ maxWidth: 820 }}>
+    <main className="wrap">
       <div className="top">
         <div>
           <h1>{owner}</h1>
