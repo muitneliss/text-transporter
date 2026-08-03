@@ -49,15 +49,31 @@ export function normalizeOwner(raw: string) {
   return raw.trim().toLowerCase().replace(/\s+/g, "-");
 }
 
+/**
+ * node:sqlite hands back null-prototype rows, which React refuses to serialize
+ * into a Client Component. Copy each one into a plain object.
+ */
+function toNote(row: Record<string, unknown>): Note {
+  return {
+    id: String(row.id),
+    owner: String(row.owner),
+    body: String(row.body),
+    color: String(row.color),
+    created_at: Number(row.created_at),
+    updated_at: Number(row.updated_at),
+  };
+}
+
 export function listNotes(owner: string): Note[] {
   return db()
     .prepare("SELECT * FROM notes WHERE owner = ? ORDER BY updated_at DESC")
-    .all(owner) as unknown as Note[];
+    .all(owner)
+    .map(toNote);
 }
 
 export function getNote(id: string): Note | null {
   const row = db().prepare("SELECT * FROM notes WHERE id = ?").get(id);
-  return row ? (row as unknown as Note) : null;
+  return row ? toNote(row) : null;
 }
 
 export function createNote(owner: string, body: string, color: string): Note {
