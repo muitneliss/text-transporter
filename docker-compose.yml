@@ -1,0 +1,33 @@
+services:
+  text-transporter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # SQLite file lives here; must match the mounted volume below.
+      DATA_DIR: /data
+    volumes:
+      - text-transporter-data:/data
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.text-transporter.rule=Host(`${DOMAIN:-notes.localhost}`)
+      - traefik.http.routers.text-transporter.entrypoints=websecure
+      - traefik.http.routers.text-transporter.tls.certresolver=letsencrypt
+      - traefik.http.services.text-transporter.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  text-transporter-data:
+
+networks:
+  dokploy-network:
+    external: true

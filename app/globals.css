@@ -1,0 +1,260 @@
+:root {
+  --bg: #14161a;
+  --panel: #1c1f26;
+  --line: #2b303a;
+  --text: #e7e9ee;
+  --muted: #949bab;
+  --accent: #f5c451;
+
+  --yellow: #f7d774;
+  --pink: #f2a1b6;
+  --blue: #9bc4f0;
+  --green: #a5d9a8;
+  --purple: #c3aae6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ---- header ---- */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.top .sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.back {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+/* ---- controls ---- */
+.btn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.btn:hover {
+  border-color: #3d4452;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.btn.primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn.danger:hover {
+  border-color: #c2554f;
+  color: #f0a09a;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+  resize: vertical;
+}
+
+.field:focus {
+  border-color: #4a5265;
+}
+
+textarea.field {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  min-height: 140px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---- home ---- */
+.home {
+  max-width: 420px;
+  margin: 18vh auto 0;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.home h1 {
+  font-size: 28px;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.home p {
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+
+/* ---- composer ---- */
+.composer {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 28px;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch[aria-pressed="true"] {
+  border-color: var(--text);
+}
+
+/* ---- note grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.note {
+  display: block;
+  min-height: 150px;
+  border-radius: 10px;
+  padding: 14px;
+  color: #1c1c1c;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  overflow: hidden;
+}
+
+.note:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36);
+}
+
+.note pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 108px;
+  overflow: hidden;
+}
+
+.note .stamp {
+  margin-top: 10px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 60px 0;
+}
+
+/* ---- detail ---- */
+.detail {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.detail pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.stripe {
+  height: 4px;
+  border-radius: 4px 4px 0 0;
+  margin: -18px -18px 16px;
+}
