@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getNote, normalizeOwner } from "@/lib/db";
-import NoteDetail from "./NoteDetail";
+import NoteDetail from "../NoteDetail";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,12 @@ export default async function NotePage({
         </Link>
       </div>
 
-      <NoteDetail note={note} owner={owner} />
+      {/* The permalink view keeps the panel frame; the board opens the same
+          contents in a sticky-shaped modal instead. */}
+      <div className="detail">
+        <div className="stripe" style={{ background: `var(--${note.color})` }} />
+        <NoteDetail note={note} owner={owner} />
+      </div>
     </main>
   );
 }
