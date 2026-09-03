@@ -17,10 +17,25 @@ function open() {
       owner      TEXT NOT NULL,
       body       TEXT NOT NULL,
       color      TEXT NOT NULL DEFAULT 'yellow',
+      pinned     INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
-    CREATE INDEX IF NOT EXISTS notes_owner_idx ON notes (owner, updated_at DESC);
+  `);
+
+  // Boards that predate pinning already have the table, so CREATE TABLE above is
+  // a no-op for them and the column has to be added in place. Existing rows take
+  // the default and come out unpinned.
+  const columns = db.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "pinned")) {
+    db.exec("ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+  }
+
+  // Supersedes notes_owner_idx: every board query now orders by pinned first.
+  db.exec(`
+    DROP INDEX IF EXISTS notes_owner_idx;
+    CREATE INDEX IF NOT EXISTS notes_board_idx
+      ON notes (owner, pinned DESC, updated_at DESC);
   `);
   return db;
 }
@@ -40,6 +55,7 @@ export type Note = {
   owner: string;
   body: string;
   color: string;
+  pinned: boolean;
   created_at: number;
   updated_at: number;
 };
@@ -59,6 +75,7 @@ function toNote(row: Record<string, unknown>): Note {
     owner: String(row.owner),
     body: String(row.body),
     color: String(row.color),
+    pinned: Boolean(row.pinned),
     created_at: Number(row.created_at),
     updated_at: Number(row.updated_at),
   };
@@ -66,7 +83,9 @@ function toNote(row: Record<string, unknown>): Note {
 
 export function listNotes(owner: string): Note[] {
   return db()
-    .prepare("SELECT * FROM notes WHERE owner = ? ORDER BY updated_at DESC")
+    .prepare(
+      "SELECT * FROM notes WHERE owner = ? ORDER BY pinned DESC, updated_at DESC"
+    )
     .all(owner)
     .map(toNote);
 }
@@ -83,6 +102,7 @@ export function createNote(owner: string, body: string, color: string): Note {
     owner,
     body,
     color,
+    pinned: false,
     created_at: now,
     updated_at: now,
   };
@@ -98,6 +118,15 @@ export function updateNote(id: string, body: string): Note | null {
     Date.now(),
     id
   );
+  return getNote(id);
+}
+
+/**
+ * Pinning is not an edit, so updated_at stays where it is — unpinning a note
+ * drops it back to whatever position its last real edit earned.
+ */
+export function setPinned(id: string, pinned: boolean): Note | null {
+  db().prepare("UPDATE notes SET pinned = ? WHERE id = ?").run(pinned ? 1 : 0, id);
   return getNote(id);
 }
 

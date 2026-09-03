@@ -31,17 +31,20 @@ export default function Composer({ owner }: { owner: string }) {
   }
 
   return (
-    <div className="composer">
-      <textarea
-        className="field"
-        placeholder="Paste or type anything…  (⌘/Ctrl + Enter to stick it)"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
-        }}
-      />
-      <div className="row" style={{ marginTop: 12, justifyContent: "space-between" }}>
+    <>
+      <div className="composer" style={{ background: `var(--${color})` }}>
+        <textarea
+          className="field"
+          placeholder="Paste or type anything…  (⌘/Ctrl + Enter to stick it)"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
+          }}
+        />
+      </div>
+
+      <div className="composer-controls">
         <div className="swatches">
           {COLORS.map((c) => (
             <button
@@ -58,6 +61,6 @@ export default function Composer({ owner }: { owner: string }) {
           {saving ? "Sticking…" : "Stick it"}
         </button>
       </div>
-    </div>
+    </>
   );
 }

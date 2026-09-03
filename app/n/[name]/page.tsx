@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { listNotes, normalizeOwner } from "@/lib/db";
 import Composer from "./Composer";
+import NoteGrid from "./NoteGrid";
 
 export const dynamic = "force-dynamic";
-
-function preview(body: string) {
-  return body.length > 400 ? body.slice(0, 400) + "…" : body;
-}
 
 export default async function BoardPage({
   params,
@@ -33,24 +30,12 @@ export default async function BoardPage({
 
       <Composer owner={owner} />
 
+      <hr className="divider" />
+
       {notes.length === 0 ? (
         <div className="empty">Nothing here yet. Paste something above.</div>
       ) : (
-        <div className="grid">
-          {notes.map((n) => (
-            <Link
-              key={n.id}
-              href={`/n/${encodeURIComponent(owner)}/${n.id}`}
-              className="note"
-              style={{ background: `var(--${n.color})` }}
-            >
-              <pre>{preview(n.body)}</pre>
-              <div className="stamp">
-                {new Date(n.updated_at).toLocaleString()}
-              </div>
-            </Link>
-          ))}
-        </div>
+        <NoteGrid notes={notes} owner={owner} />
       )}
     </main>
   );
