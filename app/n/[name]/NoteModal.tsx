@@ -41,6 +41,10 @@ export default function NoteModal({
       // Escape belongs to the textarea while typing, not to the dialog.
       const el = document.activeElement;
       if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) return;
+      // ...nor to the sheet while the expanded reader is up. That is a modal <dialog>,
+      // so the same keypress is already closing it; without this the one Escape would
+      // dismiss the reader and the sheet underneath it together.
+      if (document.querySelector("dialog[open]")) return;
       if (editing && !confirm("Discard your unsaved changes?")) return;
       onClose();
     }

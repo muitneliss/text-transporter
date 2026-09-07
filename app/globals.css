@@ -743,3 +743,147 @@ textarea.field {
 .detail .field {
   min-height: 320px;
 }
+
+/* ---- expanded reader ---- */
+
+/*
+ * The Expand overlay: a <dialog> shown with showModal(), stretched to the viewport.
+ * Modality is the whole reason for the element — it buys the top layer, a Tab trap,
+ * Escape, and an inert document behind, which is what keeps find-in-page, Select All and
+ * screen readers out of the copy of the same note sitting behind it. On the board that
+ * backdrop is the sheet; on the permalink page it is the panel.
+ * Every layout declaration is scoped to [open]. The rule hiding a closed dialog is the
+ * user agent's `dialog:not([open]) { display: none }`, and an author `display` on the bare
+ * element beats it regardless of specificity, which would dump the overlay into the page.
+ */
+.expand[open] {
+  position: fixed;
+  inset: 0;
+
+  /* 100vw, not the width `inset: 0` implies. The note is still laid out behind the
+     overlay, so a long one leaves the page scrollable, and where scrollbars take layout
+     space the initial containing block stops short of the window — leaving a dead
+     scrollbar strip beside the reader's live one, on exactly the long notes this view
+     exists for. 100vw spans the window itself. */
+  width: 100vw;
+
+  /* Undo the user agent's centred, bordered, light-themed fit-content box. */
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  /* The dialog is itself a scroll container with nothing to scroll, so without this a drag
+     starting on the bar chains to the page behind. */
+  overflow: hidden;
+  overscroll-behavior: contain;
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* A literal rather than var(--bg): custom properties did not inherit into ::backdrop in
+   older Chrome. The dialog is full-bleed, so this only shows through browser insets. */
+.expand::backdrop {
+  background: #14161a;
+}
+
+/* Not .stripe, whose -18px margins are tuned to .detail's padding and would overhang. */
+.expand-stripe {
+  flex: none;
+  height: 4px;
+}
+
+/*
+ * Pinned at the top rather than the bottom: on phones the bottom edge is where the browser
+ * toolbar and home indicator live.
+ * user-select: none is load-bearing, not polish. The rest of the document is already
+ * unselectable because it is inert, so excluding the bar too means Cmd/Ctrl+A — or a drag
+ * that runs off the top of the reader — resolves to exactly the note body, with no button
+ * labels or character count in the clipboard. That is what makes the "select the text and
+ * copy manually" fallback usable when the clipboard API is blocked.
+ */
+.expand-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px clamp(16px, 3vw, 44px);
+  border-bottom: 1px solid var(--line);
+  user-select: none;
+}
+
+.expand-meta {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The meta line already claims the free space; a second auto margin would fight it. */
+.expand-bar .seg {
+  margin-left: 0;
+}
+
+/*
+ * The overlay's only scroll container, left full-bleed so its scrollbar hugs the window
+ * edge rather than floating mid-screen beside the capped text.
+ * min-height is load-bearing: a column flex item's automatic minimum is its content
+ * height, so without it a 100,000 character note refuses to shrink and pushes the bar —
+ * and its Close button — off screen.
+ */
+.expand-reader {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 24px clamp(16px, 3vw, 44px) 40px;
+  /* Keeps the last line clear of a phone's home indicator the day anyone adds
+     viewport-fit=cover; a no-op until then. */
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+}
+
+.expand-reader:focus {
+  outline: none;
+}
+
+/* Focus is moved here on open so Page Down scrolls the note straight away. Programmatic
+   focus after a click does not match :focus-visible, so only keyboard users get the ring —
+   a viewport-sized outline for everyone else would just be noise. */
+.expand-reader:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* The window stays filled — only the measure is capped, because an uncapped line runs to
+   ~290 characters on a wide monitor. Not centred, so text starts at the same edge as the
+   bar above it. */
+.expand-reader > * {
+  max-width: 90ch;
+}
+
+.expand-text {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+
+  /* pre-wrap keeps pasted indentation and blank lines. overflow-wrap breaks a base64 blob
+     or a minified line that contains no spaces, so the reader never gains a second scroll
+     axis; word-break stays normal so prose is not chopped mid-word. */
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+/* "Esc closes" means nothing on a phone, and the count is not worth wrapping the bar onto
+   a second row and eating reading space. */
+@media (max-width: 560px) {
+  .expand-meta {
+    display: none;
+  }
+}
