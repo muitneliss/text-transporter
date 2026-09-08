@@ -29,10 +29,9 @@ export default async function NotePage({
         </Link>
       </div>
 
-      {/* The permalink view keeps the panel frame; the board opens the same
-          contents in a sticky-shaped modal instead. */}
-      <div className="detail">
-        <div className="stripe" style={{ background: `var(--${note.color})` }} />
+      {/* The same sheet of paper the board opens in a modal, sized to the page:
+          opening a note by URL should not turn it grey. */}
+      <div className="sheet page" style={{ background: `var(--${note.color})` }}>
         <NoteDetail note={note} owner={owner} />
       </div>
     </main>

@@ -221,10 +221,10 @@ export default function NoteDetail({
 
       {/*
         Portalled to <body> for the cascade, not the stacking: showModal() already lifts
-        the dialog into the top layer, but this component renders inside .sheet on the
-        board and .detail on the permalink page, and `.sheet .btn`, `.sheet .md a` and
-        `.detail pre` would all repaint the dark reader as ink-on-paper. Outside both
-        wrappers the overlay just inherits the app's own dark styling.
+        the dialog into the top layer, but this component renders inside a pastel .sheet
+        on both the board and the permalink page, and `.sheet .btn`, `.sheet .md a` and
+        friends would repaint the dark reader as ink on paper. Outside that wrapper the
+        overlay just inherits the app's own dark styling.
       */}
       {canExpand &&
         createPortal(

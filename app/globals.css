@@ -405,34 +405,12 @@ textarea.field {
   padding: 60px 0;
 }
 
-/* ---- detail ---- */
-.detail {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px;
-}
-
-.detail pre {
-  margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13.5px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
+/* ---- note controls ---- */
 .bar {
   display: flex;
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
-}
-
-.stripe {
-  height: 4px;
-  border-radius: 4px 4px 0 0;
-  margin: -18px -18px 16px;
 }
 
 /* ---- text / markdown toggle ---- */
@@ -600,8 +578,8 @@ textarea.field {
   /* Scaled up with the sheet so the corner reads the same as on a tile. */
   border-radius: 8px;
   aspect-ratio: 1 / 1;
-  width: min(640px, 100%, calc(100dvh - 48px));
-  padding: 26px;
+  width: min(820px, 100%, calc(100dvh - 48px));
+  padding: 30px;
   filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.55));
   animation: sheet-in 0.15s ease-out;
 }
@@ -611,6 +589,19 @@ textarea.field {
     opacity: 0;
     transform: translateY(8px) scale(0.985);
   }
+}
+
+/* The permalink is the same sheet of paper, sized to the page instead of the
+   viewport: a note should not lose its colour just because it was opened by URL.
+   Squareness is what goes — a permalink grows with its note — while the fold, the
+   colour and the ink-on-paper controls all still come from the rules above.
+   min-height keeps a two-line note reading as a sheet rather than a strip. */
+.sheet.page {
+  aspect-ratio: auto;
+  width: 100%;
+  max-width: 1100px;
+  min-height: min(520px, calc(100dvh - 210px));
+  animation: none;
 }
 
 .sheet:focus {
@@ -739,8 +730,8 @@ textarea.field {
   border-top-color: rgba(0, 0, 0, 0.16);
 }
 
-/* The permalink page keeps a roomy fixed editor; the modal's flexes instead. */
-.detail .field {
+/* The permalink page keeps a roomy editor; the modal's flexes to the sheet instead. */
+.sheet.page .field {
   min-height: 320px;
 }
 
@@ -793,7 +784,8 @@ textarea.field {
   background: #14161a;
 }
 
-/* Not .stripe, whose -18px margins are tuned to .detail's padding and would overhang. */
+/* The note's colour, carried into the reader so the overlay still says which note
+   this is — the sheet behind it is hidden while the overlay is up. */
 .expand-stripe {
   flex: none;
   height: 4px;
