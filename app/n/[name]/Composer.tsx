@@ -59,7 +59,10 @@ export default function Composer({ owner }: { owner: string }) {
         if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
       }}
     >
-      <div className="composer" style={{ background: `var(--paper-${color})` }}>
+      <div
+        className="composer"
+        style={{ background: `color-mix(in srgb, var(--paper-${color}) 55%, var(--surface))` }}
+      >
         {mode === "write" ? (
           <textarea
             id="composer-field"

@@ -11,15 +11,15 @@
   --accent-contrast: #fffdfa;
   --danger: #b3261e;
 
-  --paper-yellow: #f7d774;
-  --paper-pink: #f2a1b6;
-  --paper-blue: #9bc4f0;
-  --paper-green: #a5d9a8;
-  --paper-purple: #c3aae6;
+  --paper-yellow: #eddebb;
+  --paper-pink: #eccad0;
+  --paper-blue: #c2d8eb;
+  --paper-green: #bddbbe;
+  --paper-purple: #d5cbe7;
 
   --paper-ink: #1c1c1c;
-  --paper-muted: rgba(28, 28, 28, 0.62);
-  --paper-faint: rgba(28, 28, 28, 0.48);
+  --paper-muted: rgba(28, 28, 28, 0.71);
+  --paper-faint: rgba(28, 28, 28, 0.52);
   --paper-line: rgba(28, 28, 28, 0.18);
   --paper-link: #0f4c96;
   --paper-well: rgba(0, 0, 0, 0.06);
@@ -57,15 +57,15 @@
     --accent-contrast: #1c1508;
     --danger: #f2867a;
 
-    --paper-yellow: #4d3d1c;
-    --paper-pink: #4d2a3a;
-    --paper-blue: #253a52;
-    --paper-green: #274a30;
-    --paper-purple: #3d2f57;
+    --paper-yellow: #50452b;
+    --paper-pink: #55303c;
+    --paper-blue: #2b3e54;
+    --paper-green: #2b462f;
+    --paper-purple: #403357;
 
     --paper-ink: #f2ede2;
-    --paper-muted: rgba(242, 237, 226, 0.68);
-    --paper-faint: rgba(242, 237, 226, 0.5);
+    --paper-muted: rgba(242, 237, 226, 0.8);
+    --paper-faint: rgba(242, 237, 226, 0.55);
     --paper-line: rgba(242, 237, 226, 0.2);
     --paper-link: #8ec2ff;
     --paper-well: rgba(255, 255, 255, 0.08);
@@ -99,6 +99,10 @@ body {
   min-height: 100%;
   color: var(--text);
   font: 15px/1.5 var(--font-sans);
+  /* A hidden [data-tip] tooltip is absolutely positioned and off-screen-wide
+     (nowrap text centered on a small button), so it still counts toward
+     scrollable overflow near a viewport edge even while invisible. */
+  overflow-x: hidden;
 }
 
 html {
@@ -400,10 +404,11 @@ textarea.field {
 /* ---- composer: a blank sticky note in the chosen color ---- */
 .composer {
   color: var(--paper-ink);
+  border: 1px solid var(--paper-well-border);
   border-radius: var(--radius-md);
   padding: 16px;
   box-shadow: var(--paper-shadow);
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .composer .field {
@@ -575,7 +580,7 @@ textarea.field {
 /* ---- note grid ---- */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
   gap: 18px;
 }
 
@@ -585,6 +590,7 @@ textarea.field {
   flex-direction: column;
   border-radius: var(--radius-sm);
   padding: 16px;
+  min-width: 0;
   min-height: 150px;
   color: var(--paper-ink);
   box-shadow: var(--paper-shadow);
@@ -615,6 +621,18 @@ textarea.field {
   .note:focus-within {
     transform: rotate(0deg) translateY(-3px);
     box-shadow: var(--paper-shadow-hover);
+  }
+
+  /* A 360px-wide card nearly fills the grid column on a narrow phone, so the
+     tilt's rotated bounding box would overflow the viewport. Keep it flat
+     below the width where a single column takes over. */
+  @media (max-width: 480px) {
+    .grid .note:nth-child(4n),
+    .grid .note:nth-child(4n + 1),
+    .grid .note:nth-child(4n + 2),
+    .grid .note:nth-child(4n + 3) {
+      transform: none;
+    }
   }
 }
 
