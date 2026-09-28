@@ -28,9 +28,21 @@ export default function NoteDetail({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(note.body);
+  /** The body as it was when edit mode was entered — sent back as `baseBody` so the
+   *  server can tell a stale save from a fresh one. */
+  const [baseBody, setBaseBody] = useState(note.body);
   const [busy, setBusy] = useState(false);
   const [rendered, setRendered] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  /** Set only when a save/delete lands on a note someone else already changed.
+   *  The draft in `body` is never touched by any of these — only the three
+   *  panel actions (or Cancel) may replace or discard it. */
+  const [conflict, setConflict] = useState<
+    | null
+    | { kind: "conflict"; current: Note }
+    | { kind: "notFound" }
+    | { kind: "network" }
+  >(null);
   /** A counter, not a boolean: copying again has to restart the 1500ms window, and only
    *  a value that actually changes re-runs the effect that owns the timer. */
   const [copyTick, setCopyTick] = useState(0);
@@ -43,6 +55,7 @@ export default function NoteDetail({
   const expandRef = useRef<HTMLButtonElement>(null);
   const readerRef = useRef<HTMLDivElement>(null);
   const readerScroll = useRef(0);
+  const conflictRef = useRef<HTMLDivElement>(null);
 
   const copied = copyTick > 0;
   /** One expression gates the overlay's markup and the effect that opens it, so
@@ -95,6 +108,12 @@ export default function NoteDetail({
     return () => dialog?.close();
   }, []);
 
+  // Moves focus onto the panel the moment it appears and announces it via role="alert",
+  // rather than leaving focus stranded in a textarea the user can no longer usefully type into.
+  useEffect(() => {
+    if (conflict) conflictRef.current?.focus();
+  }, [conflict]);
+
   async function copy() {
     const ok = await copyText(note.body);
     if (ok) setCopyTick((tick) => tick + 1);
@@ -120,23 +139,81 @@ export default function NoteDetail({
     return () => document.removeEventListener("keydown", onKey);
   }, [editing, note.body]);
 
-  async function save() {
+  /** `base` defaults to what edit mode started from; "Overwrite with mine" passes
+   *  the other side's current body instead, so a repeat conflict is possible but a
+   *  stale overwrite is not. */
+  async function save(base: string = baseBody) {
     if (!body.trim() || busy) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/notes/${note.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body, baseBody: base }),
       });
+      if (res.status === 409) {
+        const { current } = await res.json();
+        setConflict({ kind: "conflict", current });
+        return;
+      }
+      if (res.status === 404) {
+        setConflict({ kind: "notFound" });
+        return;
+      }
       if (!res.ok) throw new Error();
+      setConflict(null);
       setEditing(false);
       router.refresh();
     } catch {
-      alert("Could not save.");
+      setConflict({ kind: "network" });
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Keeps the draft, drops the conflict it's tied to, and posts it as a brand
+   *  new note under the same owner/color — used for both a save conflict and a
+   *  delete-while-editing, so neither ever has to touch the note that beat it. */
+  async function saveAsNew() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/notes`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ owner, body, color: note.color }),
+      });
+      if (!res.ok) throw new Error();
+      // The note this editor points at may itself be gone (a notFound conflict):
+      // refreshing this same URL in place would 404 it, so leave rather than reload.
+      const wasDeleted = conflict?.kind === "notFound";
+      setConflict(null);
+      setEditing(false);
+      if (wasDeleted) {
+        if (onClose) onClose();
+        else router.push(`/n/${encodeURIComponent(owner)}`);
+      }
+      router.refresh();
+    } catch {
+      alert("Could not save as a new note.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Throws the draft away and shows whatever the other side actually saved. */
+  function discardMine(current: Note) {
+    setBody(current.body);
+    setConflict(null);
+    setEditing(false);
+    router.refresh();
+  }
+
+  /** The note itself is gone — nothing to load, so this just leaves the editor. */
+  function discardAfterDelete() {
+    setConflict(null);
+    if (onClose) onClose();
+    else router.push(`/n/${encodeURIComponent(owner)}`);
+    router.refresh();
   }
 
   async function remove() {
@@ -183,6 +260,61 @@ export default function NoteDetail({
         <pre>{note.body}</pre>
       )}
 
+      {editing && conflict && (
+        <div
+          className="conflict"
+          role="alert"
+          tabIndex={-1}
+          ref={conflictRef}
+        >
+          {conflict.kind === "conflict" && (
+            <>
+              <p className="conflict-msg">
+                Someone else saved this note while you were editing. Your draft is
+                still here — theirs is below.
+              </p>
+              <pre className="conflict-body">{conflict.current.body}</pre>
+              <div className="conflict-actions">
+                <button className="btn primary" onClick={() => save(conflict.current.body)} disabled={busy}>
+                  Overwrite with mine
+                </button>
+                <button className="btn" onClick={saveAsNew} disabled={busy}>
+                  Save mine as a new note
+                </button>
+                <button className="btn" onClick={() => discardMine(conflict.current)} disabled={busy}>
+                  Discard mine
+                </button>
+              </div>
+            </>
+          )}
+          {conflict.kind === "notFound" && (
+            <>
+              <p className="conflict-msg">
+                This note was deleted while you were editing. Your draft is still here.
+              </p>
+              <div className="conflict-actions">
+                <button className="btn primary" onClick={saveAsNew} disabled={busy}>
+                  Save as a new note
+                </button>
+                <button className="btn" onClick={discardAfterDelete} disabled={busy}>
+                  Discard
+                </button>
+              </div>
+            </>
+          )}
+          {conflict.kind === "network" && (
+            <>
+              <p className="conflict-msg">Could not reach the server. Your draft is still here.</p>
+              <div className="conflict-actions">
+                <button className="btn primary" onClick={() => save()} disabled={busy}>
+                  Retry
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       <span className="sr-only" aria-live="polite">
         {copied ? "Copied" : ""}
       </span>
@@ -190,13 +322,14 @@ export default function NoteDetail({
       <div className="bar">
         {editing ? (
           <>
-            <button className="btn primary" onClick={save} disabled={busy || !body.trim()}>
+            <button className="btn primary" onClick={() => save()} disabled={busy || !body.trim()}>
               Save
             </button>
             <button
               className="btn"
               onClick={() => {
                 setBody(note.body);
+                setConflict(null);
                 setEditing(false);
               }}
             >
@@ -219,6 +352,9 @@ export default function NoteDetail({
               className="btn icon-only"
               onClick={() => {
                 setExpanded(false);
+                setBaseBody(note.body);
+                setBody(note.body);
+                setConflict(null);
                 setEditing(true);
               }}
               aria-label="Edit note"

@@ -1288,3 +1288,42 @@ textarea.field {
     align-items: stretch;
   }
 }
+
+/* ---- conflict panel: a stale save landed on top of someone else's ---- */
+.conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--paper-well);
+  border: 1px solid var(--paper-well-border);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.conflict-msg {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.conflict-body {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px 12px;
+  background: var(--paper-well-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
