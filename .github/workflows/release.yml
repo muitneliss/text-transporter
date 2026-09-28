@@ -224,7 +224,7 @@ jobs:
           if error=$(gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/deploy" \
             -f sha="$GITHUB_SHA" -F force=true 2>&1 >/dev/null); then
             echo "moved existing deploy tag"
-          elif [[ "$error" == *"HTTP 404"* ]]; then
+          elif [[ "$error" == *"HTTP 404"* || "$error" == *"Reference does not exist"* ]]; then
             gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
               -f ref=refs/tags/deploy -f sha="$GITHUB_SHA"
           else
