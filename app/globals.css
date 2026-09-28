@@ -438,6 +438,12 @@ textarea.field {
   overflow: auto;
 }
 
+/* --text-muted (the global .muted color) is tuned for the desk background,
+   not the note's paper tint underneath this placeholder. */
+.composer .muted {
+  color: var(--paper-muted);
+}
+
 /* The field lost its own focus ring above, so the whole note shows one
    instead. Ink-colored rather than the global accent, which can clash with
    the note's own paper color. */
@@ -471,7 +477,15 @@ textarea.field {
 .composer-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  column-gap: 10px;
+}
+
+/* Pinned to the end of its own flex line even when the row above wraps, so
+   Save stays right-aligned instead of trailing after the hint text. */
+.composer-actions > .btn.primary {
+  margin-left: auto;
 }
 
 .composer-actions .seg {
@@ -1011,7 +1025,7 @@ textarea.field {
   padding: 0;
   color: rgba(255, 255, 255, 0.65);
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease;
