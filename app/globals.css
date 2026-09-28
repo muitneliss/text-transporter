@@ -1,20 +1,95 @@
 :root {
-  --bg: #14161a;
-  --panel: #1c1f26;
-  --line: #2b303a;
-  --text: #e7e9ee;
-  --muted: #949bab;
-  --accent: #f5c451;
+  --bg: #efe9e0;
+  --surface: #fffdfa;
+  --surface-hover: #f3ede2;
+  --border: #ddd4c4;
+  --border-strong: #c7bba5;
+  --text: #241f18;
+  --text-muted: #6f6656;
+  --text-faint: #a89d89;
+  --accent: #b45309;
+  --accent-contrast: #fffdfa;
+  --danger: #b3261e;
 
-  --yellow: #f7d774;
-  --pink: #f2a1b6;
-  --blue: #9bc4f0;
-  --green: #a5d9a8;
-  --purple: #c3aae6;
+  --paper-yellow: #f7d774;
+  --paper-pink: #f2a1b6;
+  --paper-blue: #9bc4f0;
+  --paper-green: #a5d9a8;
+  --paper-purple: #c3aae6;
+
+  --paper-ink: #1c1c1c;
+  --paper-muted: rgba(28, 28, 28, 0.62);
+  --paper-faint: rgba(28, 28, 28, 0.48);
+  --paper-line: rgba(28, 28, 28, 0.18);
+  --paper-link: #0f4c96;
+  --paper-well: rgba(0, 0, 0, 0.06);
+  --paper-well-border: rgba(0, 0, 0, 0.14);
+
+  --paper-shadow: 0 1px 2px rgba(28, 20, 10, 0.14), 0 8px 18px rgba(28, 20, 10, 0.12);
+  --paper-shadow-hover: 0 3px 8px rgba(28, 20, 10, 0.18), 0 16px 30px rgba(28, 20, 10, 0.18);
+
+  --tape-bg: rgba(255, 255, 255, 0.6);
+  --tape-border: rgba(0, 0, 0, 0.08);
+
+  --code-panel: rgba(0, 0, 0, 0.45);
+  --code-panel-border: rgba(255, 255, 255, 0.12);
+  --code-ink: #f1efe8;
+
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14110d;
+    --surface: #201b14;
+    --surface-hover: #2a231a;
+    --border: #362d20;
+    --border-strong: #4a3d29;
+    --text: #f0ece2;
+    --text-muted: #a89d89;
+    --text-faint: #786d5c;
+    --accent: #fbbf24;
+    --accent-contrast: #1c1508;
+    --danger: #f2867a;
+
+    --paper-yellow: #4d3d1c;
+    --paper-pink: #4d2a3a;
+    --paper-blue: #253a52;
+    --paper-green: #274a30;
+    --paper-purple: #3d2f57;
+
+    --paper-ink: #f2ede2;
+    --paper-muted: rgba(242, 237, 226, 0.68);
+    --paper-faint: rgba(242, 237, 226, 0.5);
+    --paper-line: rgba(242, 237, 226, 0.2);
+    --paper-link: #8ec2ff;
+    --paper-well: rgba(255, 255, 255, 0.08);
+    --paper-well-border: rgba(255, 255, 255, 0.16);
+
+    --paper-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 26px rgba(0, 0, 0, 0.55);
+    --paper-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.55), 0 20px 38px rgba(0, 0, 0, 0.6);
+
+    --tape-bg: rgba(255, 255, 255, 0.16);
+    --tape-border: rgba(255, 255, 255, 0.1);
+  }
 }
 
 * {
   box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 html,
@@ -22,9 +97,8 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bg);
   color: var(--text);
-  font: 15px/1.5 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+  font: 15px/1.5 var(--font-sans);
 }
 
 html {
@@ -34,6 +108,13 @@ html {
 body {
   display: flex;
   flex-direction: column;
+  background: radial-gradient(ellipse 1200px 700px at 50% -10%, rgba(255, 255, 255, 0.35), transparent), var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: radial-gradient(ellipse 1200px 700px at 50% -10%, rgba(255, 255, 255, 0.04), transparent), var(--bg);
+  }
 }
 
 a {
@@ -48,14 +129,148 @@ textarea {
   color: inherit;
 }
 
-/* Full-bleed: the app owns the entire window, so there is no "outside" to click. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* ---- tooltips: data-tip carries the text a button used to show as a label.
+   Shown on hover after a short delay, immediately on focus-visible; skipped
+   on touch-only devices unless the button is keyboard-focused. ---- */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after,
+[data-tip]::before {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 40;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-tip]::before {
+  content: "";
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-tip]::after,
+  [data-tip]::before {
+    transition: opacity 0.12s ease, visibility 0.12s ease;
+  }
+}
+
+[data-tip]:hover::after,
+[data-tip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 300ms;
+}
+
+[data-tip]:focus-visible::after,
+[data-tip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* Flip below the button: for controls near the top edge, where a tooltip
+   above would be clipped by the viewport. */
+.tip-below::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.tip-below::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: var(--text);
+}
+
+/* Anchor to the button's right edge instead of centering: for controls near
+   the right edge, where a centered tooltip would run off-screen. Skips the
+   arrow rather than trying to keep it aligned to an off-center tip. */
+.tip-left::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.tip-left::before {
+  content: none;
+}
+
+@media (hover: none) {
+  [data-tip]:hover::after,
+  [data-tip]:hover::before {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ---- layout ---- */
 .wrap {
   flex: 1;
   width: 100%;
   padding: 28px clamp(16px, 3vw, 44px) 60px;
 }
 
-/* ---- header ---- */
 .top {
   display: flex;
   align-items: center;
@@ -66,18 +281,19 @@ textarea {
 
 .top h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 650;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .top .sub {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .back {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -85,34 +301,39 @@ textarea {
   color: var(--text);
 }
 
-/* ---- controls ---- */
+/* ---- controls (desk chrome, not on paper) ---- */
 .btn {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 13px;
+  font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
 .btn:hover {
-  border-color: #3d4452;
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
 }
 
 .btn.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #1a1a1a;
+  color: var(--accent-contrast);
   font-weight: 600;
 }
 
 .btn.primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
 .btn.danger:hover {
-  border-color: #c2554f;
-  color: #f0a09a;
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .btn:disabled {
@@ -120,28 +341,22 @@ textarea {
   cursor: not-allowed;
 }
 
-.btn.with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
 .field {
   width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   outline: none;
   resize: vertical;
 }
 
 .field:focus {
-  border-color: #4a5265;
+  border-color: var(--accent);
 }
 
 textarea.field {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 13.5px;
   line-height: 1.6;
   min-height: 140px;
@@ -171,202 +386,273 @@ textarea.field {
 }
 
 .home h1 {
-  font-size: 28px;
+  font-family: var(--font-mono);
+  font-size: 26px;
   margin: 0 0 8px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .home p {
-  color: var(--muted);
+  color: var(--text-muted);
   margin: 0 0 28px;
 }
 
-/* ---- composer ---- */
-
-/* The card is a preview of the sticky you are about to stick: picking a swatch
-   tints it, so the note looks the same before and after saving. */
-/* A blank sticky waiting to be written on — same paper, same peel as the wall
-   below it, so what you type looks like what you will get. */
+/* ---- composer: a blank sticky note in the chosen color ---- */
 .composer {
-  --fold: 40px;
-
-  /* Same paper and peel as a tile, but a wide sheet rather than a square one:
-     it is a writing surface, so it takes the full column and stays short. */
-  width: 100%;
+  color: var(--paper-ink);
+  border-radius: var(--radius-md);
   padding: 16px;
-  overflow: hidden;
-  filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.34));
+  box-shadow: var(--paper-shadow);
   transition: background 0.15s ease;
 }
 
-/* Transparent so the tint reads through, dark ink to match .note. Fills the
-   square, and cannot be dragged out of it. */
 .composer .field {
-  background: transparent;
-  border: none;
-  padding: 0;
-  flex: 1;
-  min-height: 100px;
-  resize: none;
+  background: var(--paper-well);
+  border: 1px solid var(--paper-well-border);
+  color: inherit;
+}
+
+.composer .field:focus {
+  border-color: currentColor;
 }
 
 .composer .field::placeholder {
-  color: rgba(28, 28, 28, 0.45);
+  color: var(--paper-muted);
 }
 
-/* Controls sit outside the tinted card, on the page ground, so the swatches
-   stay legible against a neutral backdrop whatever colour is selected. */
+.composer .composer-preview {
+  min-height: 140px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* Ink-colored rather than the global accent ring, which can clash with the
+   note's own paper color. */
+.composer-preview:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 .composer-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 12px 0 28px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
-/* Separates what you are about to stick from what is already on the wall. */
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.composer-actions .seg {
+  margin-left: 0;
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
 .divider {
   border: 0;
-  border-top: 1px solid var(--line);
-  margin: 0 0 28px;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
 }
 
+/* ---- paper swatches: composer color picker ---- */
 .swatches {
   display: flex;
   gap: 8px;
 }
 
 .swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.swatch:hover {
+  opacity: 0.9;
 }
 
 .swatch[aria-pressed="true"] {
+  opacity: 1;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* ---- board toolbar: search + filters ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-field {
+  padding-right: 34px;
+}
+
+.search-hint {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-field:focus ~ .search-hint,
+.search-field:not(:placeholder-shown) ~ .search-hint {
+  opacity: 0;
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.chip[aria-pressed="true"] {
   border-color: var(--text);
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+/* A tiny paper swatch, not a plain dot. */
+.chip-dot {
+  width: 12px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  flex: none;
+}
+
+.chip.clear {
+  border-style: dashed;
 }
 
 /* ---- note grid ---- */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 14px;
-}
-
-/* A real Post-it: square, sharp corners, and the bottom-right corner peeled up.
-   clip-path cuts that corner away so the page shows through; drop-shadow (not
-   box-shadow, which the clip would eat) then traces the notched silhouette.
-   The composer, the grid tile and the modal sheet are the same sheet of paper at
-   three sizes, so the shape is defined once and scaled by --fold. */
-.composer,
-.note,
-.sheet {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  /* Survives the clip below: clip-path intersects with what is painted, and
-     border-radius has already left the corner pixels unpainted. drop-shadow
-     traces the result, so it follows the rounding too. */
-  border-radius: 5px;
-  color: #1c1c1c;
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% calc(100% - var(--fold)),
-    calc(100% - var(--fold)) 100%,
-    0 100%
-  );
-}
-
-/* The lifted flap. Everything before the 50% stop falls outside the clip, so the
-   gradient only paints the triangle still attached to the note: dark at the
-   crease, fading as the paper settles back down. */
-.composer::after,
-.note::after,
-.sheet::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: var(--fold);
-  height: var(--fold);
-  background: linear-gradient(
-    315deg,
-    transparent 50%,
-    rgba(0, 0, 0, 0.2) 51%,
-    rgba(0, 0, 0, 0.06) 68%,
-    transparent 88%
-  );
+  gap: 18px;
 }
 
 .note {
-  --fold: 40px;
-
-  aspect-ratio: 1 / 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-sm);
   padding: 16px;
-  overflow: hidden;
-  filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.34));
-  transition: transform 0.12s ease, filter 0.12s ease;
+  min-height: 150px;
+  color: var(--paper-ink);
+  box-shadow: var(--paper-shadow);
 }
 
-.note:hover {
-  transform: translateY(-2px);
-  filter: drop-shadow(0 11px 16px rgba(0, 0, 0, 0.42));
+@media (prefers-reduced-motion: no-preference) {
+  .note {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .grid .note:nth-child(4n) {
+    transform: rotate(-1.1deg);
+  }
+
+  .grid .note:nth-child(4n + 1) {
+    transform: rotate(0.7deg);
+  }
+
+  .grid .note:nth-child(4n + 2) {
+    transform: rotate(-0.5deg);
+  }
+
+  .grid .note:nth-child(4n + 3) {
+    transform: rotate(1deg);
+  }
+
+  .note:hover,
+  .note:focus-within {
+    transform: rotate(0deg) translateY(-3px);
+    box-shadow: var(--paper-shadow-hover);
+  }
 }
 
-/* Stretched over the whole tile, under the pin button, so the card reads as one
-   link without wrapping the button in an anchor. */
+/* A strip of washi tape holding a pinned note down. */
+.note.pinned::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 52px;
+  height: 18px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--tape-bg);
+  border: 1px solid var(--tape-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  border-radius: 1px;
+}
+
 .note .open {
   position: absolute;
   inset: 0;
   z-index: 1;
 }
 
-/* Faint until the note is pinned or the tile is hovered — visible enough to
-   find on a touch screen, quiet enough not to compete with the note. */
 .note .pin {
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 6px;
+  right: 6px;
   z-index: 2;
-  display: flex;
-  padding: 2px;
-  background: none;
-  border: 0;
-  border-radius: 6px;
-  color: #1c1c1c;
-  opacity: 0.32;
-  cursor: pointer;
-  transition: opacity 0.12s ease;
 }
 
-.note:hover .pin,
-.note .pin:focus-visible {
-  opacity: 0.7;
-}
-
-.note.pinned .pin,
-.note.pinned:hover .pin {
-  opacity: 1;
-}
-
-.note .pin:disabled {
-  cursor: wait;
-}
-
-/* First line of the body, promoted to a heading. Clamped at two lines so a long
-   opening sentence cannot crowd out the preview underneath it. Kept clear of
-   the pin button in the same corner. */
 .note .title {
-  padding-right: 26px;
-  font-size: 15.5px;
+  padding-right: 40px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: -0.01em;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -376,63 +662,125 @@ textarea.field {
 
 .note pre {
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.55;
+  color: var(--paper-muted);
   white-space: pre-wrap;
   word-break: break-word;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  /* A body too long for the square fades out instead of being sliced through a
-     line of text. The fade sits in empty space when the note is short. */
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
 }
 
-/* Pinned to the bottom even when there is no body, and held clear of the peel
-   so the date never runs off into the cut corner. */
 .note .stamp {
   margin-top: auto;
   padding-top: 10px;
-  padding-right: calc(var(--fold) - 14px);
   font-size: 11px;
-  opacity: 0.6;
+  color: var(--paper-faint);
 }
 
 .empty {
-  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
   text-align: center;
   padding: 60px 0;
+}
+
+/* ---- pin button ---- */
+.pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.pin:hover {
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.pin:focus-visible {
+  opacity: 1;
+}
+
+.note.pinned .pin {
+  opacity: 0.9;
+}
+
+.pin:disabled {
+  cursor: wait;
 }
 
 /* ---- note controls ---- */
 .bar {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
 }
 
-/* ---- text / markdown toggle ---- */
+.btn.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
 
-/* A view control, not an action, so it sits apart from the buttons it shares
-   the bar with. */
+.btn.icon-only {
+  padding: 0;
+  justify-content: center;
+}
+
+/* Hit targets for every icon-only control: at least 36px, 40px on touch. */
+.pin,
+.sheet-close,
+.codeblock-copy,
+.btn.icon-only {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .pin,
+  .sheet-close,
+  .codeblock-copy,
+  .btn.icon-only {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* ---- view toggle (Text / Markdown, Write / Preview) ---- */
 .seg {
   display: flex;
   margin-left: auto;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 2px;
 }
 
 .seg-btn {
   background: none;
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 6px 12px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
 }
@@ -442,11 +790,72 @@ textarea.field {
 }
 
 .seg-btn[aria-pressed="true"] {
-  background: #2b303a;
+  background: var(--surface);
   color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* ---- rendered markdown ---- */
+/* ---- controls on paper: sheet and the expand reader re-draw the shared
+   controls as ink on paper rather than the desk-chrome styling above. ---- */
+.sheet .btn,
+.expand .btn {
+  background: var(--paper-well);
+  border-color: var(--paper-well-border);
+  color: inherit;
+}
+
+.sheet .btn:hover,
+.expand .btn:hover {
+  border-color: currentColor;
+}
+
+.sheet .btn.primary,
+.expand .btn.primary {
+  background: var(--paper-ink);
+  border-color: var(--paper-ink);
+  color: var(--paper-yellow);
+}
+
+.sheet .btn.danger:hover,
+.expand .btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.sheet .seg,
+.expand .seg {
+  background: var(--paper-well);
+  border-color: var(--paper-well-border);
+}
+
+.sheet .seg-btn,
+.expand .seg-btn {
+  color: var(--paper-muted);
+}
+
+.sheet .seg-btn:hover,
+.expand .seg-btn:hover {
+  color: inherit;
+}
+
+.sheet .seg-btn[aria-pressed="true"],
+.expand .seg-btn[aria-pressed="true"] {
+  background: var(--paper-well-border);
+  color: inherit;
+  box-shadow: none;
+}
+
+.sheet .field {
+  background: var(--paper-well);
+  border-color: var(--paper-well-border);
+  color: inherit;
+}
+
+.sheet .field:focus {
+  border-color: currentColor;
+}
+
+/* ---- rendered markdown: always sits on paper (composer, sheet, expand) ---- */
 .md {
   font-size: 14.5px;
   line-height: 1.65;
@@ -499,53 +908,128 @@ textarea.field {
 }
 
 .md a {
-  color: var(--accent);
+  color: var(--paper-link);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .md code {
-  background: #12151b;
-  border: 1px solid var(--line);
+  background: var(--paper-well);
+  border: 1px solid var(--paper-well-border);
   border-radius: 5px;
   padding: 1px 5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
-}
-
-.md pre {
-  background: #12151b;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin: 0 0 14px;
-  overflow-x: auto;
-}
-
-/* The block already draws the frame; the code inside should not draw it again. */
-.md pre code {
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: 13px;
-  line-height: 1.55;
+  color: inherit;
 }
 
 .md blockquote {
   margin: 0 0 14px;
   padding: 2px 0 2px 14px;
-  border-left: 3px solid var(--line);
-  color: var(--muted);
+  border-left: 3px solid var(--paper-line);
+  color: var(--paper-muted);
 }
 
 .md hr {
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--paper-line);
   margin: 20px 0;
 }
 
 .md del {
   opacity: 0.6;
+}
+
+/* ---- fenced code block contract: a translucent dark panel that reads on
+   every paper color, in both themes, independent of the page theme ---- */
+.codeblock {
+  margin: 0 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--code-panel);
+  border: 1px solid var(--code-panel-border);
+}
+
+.codeblock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--code-panel-border);
+}
+
+.codeblock-lang {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.codeblock-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.codeblock-copy:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.codeblock-copy[data-copied="true"] {
+  color: #8be08b;
+  border-color: rgba(139, 224, 139, 0.5);
+}
+
+.codeblock-pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+
+.codeblock-pre code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--code-ink);
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.tk-kw {
+  color: #c678dd;
+}
+
+.tk-str {
+  color: #98c379;
+}
+
+.tk-num {
+  color: #d19a66;
+}
+
+.tk-com {
+  color: #9099a2;
+  font-style: italic;
+}
+
+.tk-fn {
+  color: #61afef;
+}
+
+.tk-prop {
+  color: #56b6c2;
+}
+
+.tk-tag {
+  color: #e06c75;
 }
 
 /* ---- note modal ---- */
@@ -557,9 +1041,9 @@ textarea.field {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(9, 10, 13, 0.5);
-  backdrop-filter: blur(8px) saturate(0.9);
-  -webkit-backdrop-filter: blur(8px) saturate(0.9);
+  background: rgba(20, 16, 10, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   animation: backdrop-in 0.15s ease-out;
 }
 
@@ -569,18 +1053,18 @@ textarea.field {
   }
 }
 
-/* The tile, enlarged — shape and peel come from the shared .note/.sheet rules.
-   Width is capped by the viewport height as well as its width so the sheet stays
-   square instead of being squashed by aspect-ratio in a short window. */
+/* The tile, enlarged: the same sheet of paper as the grid, sized to the
+   viewport instead of a grid cell. */
 .sheet {
-  --fold: 54px;
-
-  /* Scaled up with the sheet so the corner reads the same as on a tile. */
-  border-radius: 8px;
-  aspect-ratio: 1 / 1;
-  width: min(820px, 100%, calc(100dvh - 48px));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 64px);
+  color: var(--paper-ink);
+  border-radius: var(--radius-lg);
   padding: 30px;
-  filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.55));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
   animation: sheet-in 0.15s ease-out;
 }
 
@@ -592,15 +1076,11 @@ textarea.field {
 }
 
 /* The permalink is the same sheet of paper, sized to the page instead of the
-   viewport: a note should not lose its colour just because it was opened by URL.
-   Squareness is what goes — a permalink grows with its note — while the fold, the
-   colour and the ink-on-paper controls all still come from the rules above.
-   min-height keeps a two-line note reading as a sheet rather than a strip. */
+   viewport: a note should not lose its color just because it was opened by URL. */
 .sheet.page {
-  aspect-ratio: auto;
   width: 100%;
-  max-width: 1100px;
-  min-height: min(520px, calc(100dvh - 210px));
+  max-width: 900px;
+  max-height: none;
   animation: none;
 }
 
@@ -610,38 +1090,40 @@ textarea.field {
 
 .sheet-close {
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   z-index: 2;
   display: flex;
-  padding: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   background: none;
   border: 0;
-  border-radius: 6px;
-  color: #1c1c1c;
-  opacity: 0.45;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  opacity: 0.5;
   cursor: pointer;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.12s ease, background 0.12s ease;
 }
 
 .sheet-close:hover {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
 }
 
-/* The note fills the sheet and scrolls on its own; the right inset keeps text
-   clear of the close button above and the peeled corner below. */
 .sheet > pre,
 .sheet > .md,
-.sheet > .field {
+.sheet > .field,
+.sheet > .composer-preview {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-right: 34px;
+  padding-right: 30px;
 }
 
 .sheet > pre {
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 13.5px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -650,192 +1132,66 @@ textarea.field {
 
 .sheet .bar {
   margin-top: 16px;
-  padding-right: calc(var(--fold) - 10px);
 }
 
-/* ---- controls on paper ----
-   The dark-panel styling of the shared controls disappears on a pastel sheet,
-   so inside .sheet they are re-drawn as ink on paper. */
-.sheet .field {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.18);
-  color: inherit;
-}
-
-.sheet .field:focus {
-  border-color: rgba(0, 0, 0, 0.42);
-}
-
-.sheet .btn {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.2);
-  color: #1c1c1c;
-}
-
-.sheet .btn:hover {
-  border-color: rgba(0, 0, 0, 0.45);
-}
-
-.sheet .btn.primary {
-  background: #1c1c1c;
-  border-color: #1c1c1c;
-  color: #f2f2f2;
-}
-
-.sheet .btn.danger:hover {
-  border-color: #9c302a;
-  color: #8a2924;
-}
-
-.sheet .seg {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-.sheet .seg-btn {
-  color: rgba(28, 28, 28, 0.55);
-}
-
-.sheet .seg-btn:hover {
-  color: #1c1c1c;
-}
-
-.sheet .seg-btn[aria-pressed="true"] {
-  background: rgba(0, 0, 0, 0.13);
-  color: #1c1c1c;
-}
-
-.sheet .note-pin,
-.sheet .pin {
-  color: #1c1c1c;
-}
-
-.sheet .md code,
-.sheet .md pre {
-  background: rgba(0, 0, 0, 0.07);
-  border-color: rgba(0, 0, 0, 0.14);
-}
-
-/* The accent yellow is invisible on yellow paper. */
-.sheet .md a {
-  color: #0f4c96;
-}
-
-.sheet .md blockquote {
-  border-left-color: rgba(0, 0, 0, 0.22);
-  color: rgba(28, 28, 28, 0.66);
-}
-
-.sheet .md hr {
-  border-top-color: rgba(0, 0, 0, 0.16);
-}
-
-/* The permalink page keeps a roomy editor; the modal's flexes to the sheet instead. */
 .sheet.page .field {
   min-height: 320px;
 }
 
-/* ---- expanded reader ---- */
-
-/*
- * The Expand overlay: a <dialog> shown with showModal(), stretched to the viewport.
- * Modality is the whole reason for the element — it buys the top layer, a Tab trap,
- * Escape, and an inert document behind, which is what keeps find-in-page, Select All and
- * screen readers out of the copy of the same note sitting behind it. On the board that
- * backdrop is the sheet; on the permalink page it is the panel.
- * Every layout declaration is scoped to [open]. The rule hiding a closed dialog is the
- * user agent's `dialog:not([open]) { display: none }`, and an author `display` on the bare
- * element beats it regardless of specificity, which would dump the overlay into the page.
- */
+/* ---- expanded reader: the same sheet of paper, full screen ---- */
 .expand[open] {
   position: fixed;
   inset: 0;
-
-  /* 100vw, not the width `inset: 0` implies. The note is still laid out behind the
-     overlay, so a long one leaves the page scrollable, and where scrollbars take layout
-     space the initial containing block stops short of the window — leaving a dead
-     scrollbar strip beside the reader's live one, on exactly the long notes this view
-     exists for. 100vw spans the window itself. */
   width: 100vw;
-
-  /* Undo the user agent's centred, bordered, light-themed fit-content box. */
   height: auto;
   max-width: none;
   max-height: none;
   margin: 0;
   border: 0;
   padding: 0;
-
   display: flex;
   flex-direction: column;
-
-  /* The dialog is itself a scroll container with nothing to scroll, so without this a drag
-     starting on the bar chains to the page behind. */
   overflow: hidden;
   overscroll-behavior: contain;
-
-  background: var(--bg);
-  color: var(--text);
+  color: var(--paper-ink);
 }
 
-/* A literal rather than var(--bg): custom properties did not inherit into ::backdrop in
-   older Chrome. The dialog is full-bleed, so this only shows through browser insets. */
 .expand::backdrop {
-  background: #14161a;
+  background: rgba(0, 0, 0, 0.5);
 }
 
-/* The note's colour, carried into the reader so the overlay still says which note
-   this is — the sheet behind it is hidden while the overlay is up. */
 .expand-stripe {
   flex: none;
   height: 4px;
+  background: rgba(0, 0, 0, 0.12);
 }
 
-/*
- * Pinned at the top rather than the bottom: on phones the bottom edge is where the browser
- * toolbar and home indicator live.
- * user-select: none is load-bearing, not polish. The rest of the document is already
- * unselectable because it is inert, so excluding the bar too means Cmd/Ctrl+A — or a drag
- * that runs off the top of the reader — resolves to exactly the note body, with no button
- * labels or character count in the clipboard. That is what makes the "select the text and
- * copy manually" fallback usable when the clipboard API is blocked.
- */
 .expand-bar {
   flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px clamp(16px, 3vw, 44px);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--paper-line);
   user-select: none;
 }
 
 .expand-meta {
   margin-right: auto;
-  color: var(--muted);
+  color: var(--paper-muted);
   font-size: 13px;
 }
 
-/* The meta line already claims the free space; a second auto margin would fight it. */
 .expand-bar .seg {
   margin-left: 0;
 }
 
-/*
- * The overlay's only scroll container, left full-bleed so its scrollbar hugs the window
- * edge rather than floating mid-screen beside the capped text.
- * min-height is load-bearing: a column flex item's automatic minimum is its content
- * height, so without it a 100,000 character note refuses to shrink and pushes the bar —
- * and its Close button — off screen.
- */
 .expand-reader {
   flex: 1;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
   padding: 24px clamp(16px, 3vw, 44px) 40px;
-  /* Keeps the last line clear of a phone's home indicator the day anyone adds
-     viewport-fit=cover; a no-op until then. */
   padding-bottom: max(40px, env(safe-area-inset-bottom));
 }
 
@@ -843,39 +1199,38 @@ textarea.field {
   outline: none;
 }
 
-/* Focus is moved here on open so Page Down scrolls the note straight away. Programmatic
-   focus after a click does not match :focus-visible, so only keyboard users get the ring —
-   a viewport-sized outline for everyone else would just be noise. */
 .expand-reader:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--paper-ink);
   outline-offset: -2px;
 }
 
-/* The window stays filled — only the measure is capped, because an uncapped line runs to
-   ~290 characters on a wide monitor. Not centred, so text starts at the same edge as the
-   bar above it. */
 .expand-reader > * {
   max-width: 90ch;
 }
 
 .expand-text {
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.7;
-
-  /* pre-wrap keeps pasted indentation and blank lines. overflow-wrap breaks a base64 blob
-     or a minified line that contains no spaces, so the reader never gains a second scroll
-     axis; word-break stays normal so prose is not chopped mid-word. */
   white-space: pre-wrap;
   word-break: normal;
   overflow-wrap: anywhere;
 }
 
-/* "Esc closes" means nothing on a phone, and the count is not worth wrapping the bar onto
-   a second row and eating reading space. */
 @media (max-width: 560px) {
   .expand-meta {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .sheet {
+    padding: 22px 16px 16px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

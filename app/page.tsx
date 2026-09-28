@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <main className="home">
       <h1>Text Transporter</h1>
-      <p>Type a name. Whatever you stick there follows you to any machine.</p>
+      <p>Type a name. Whatever you paste there follows you to any machine.</p>
       <form onSubmit={go} className="row">
         <input
           className="field"

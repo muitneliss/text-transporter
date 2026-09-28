@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import CodeBlock from "./CodeBlock";
+import { safeHref } from "./safeHref";
 
 /**
  * A Markdown subset rendered straight to React elements. Notes are pasted by
@@ -11,13 +13,6 @@ import type { ReactNode } from "react";
  * A single newline inside a paragraph stays a line break, which is what people
  * expect of a notes app even though CommonMark would fold it into a space.
  */
-
-const SAFE_SCHEME = /^(?:https?:|mailto:)/i;
-
-function safeHref(raw: string) {
-  const href = raw.trim();
-  return SAFE_SCHEME.test(href) ? href : null;
-}
 
 const INLINE =
   /(`[^`]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\*[^*\n]+\*)|(_[^_\n]+_)|(\[[^\]]*\]\([^\s)]+\))|(https?:\/\/[^\s<>]+)/g;
@@ -112,15 +107,12 @@ export default function Markdown({ source }: { source: string }) {
     }
 
     if (FENCE.test(line)) {
+      const lang = (line.match(/^\s*```(\S*)/)?.[1] ?? "").toLowerCase() || "text";
       const buf: string[] = [];
       i++;
       while (i < lines.length && !FENCE.test(lines[i])) buf.push(lines[i++]);
       i++; // closing fence, if the note ever bothered to write one
-      out.push(
-        <pre key={key()}>
-          <code>{buf.join("\n")}</code>
-        </pre>
-      );
+      out.push(<CodeBlock key={key()} code={buf.join("\n")} lang={lang} />);
       continue;
     }
 
