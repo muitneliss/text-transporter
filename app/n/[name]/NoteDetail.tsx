@@ -37,6 +37,11 @@ export default function NoteDetail({
    *  instead, so a quick Edit right after a successful save can't hand the server
    *  a stale `baseBody` and manufacture a conflict with yourself. */
   const [latest, setLatest] = useState(note.body);
+  /** Paired with `latest`: a save that resolves out of order (its own quick
+   *  follow-up already landed and moved `latest` ahead) must not let a late,
+   *  now-stale `note` prop drag `latest` back and manufacture a conflict with
+   *  yourself on the next Edit. Always moved together with `latest`. */
+  const [latestUpdatedAt, setLatestUpdatedAt] = useState(note.updated_at);
   const [busy, setBusy] = useState(false);
   const [rendered, setRendered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -47,7 +52,7 @@ export default function NoteDetail({
     | null
     | { kind: "conflict"; current: Note }
     | { kind: "notFound" }
-    | { kind: "network"; message?: string }
+    | { kind: "network"; message?: string; retryable?: boolean }
   >(null);
   /** A counter, not a boolean: copying again has to restart the 1500ms window, and only
    *  a value that actually changes re-runs the effect that owns the timer. */
@@ -73,29 +78,44 @@ export default function NoteDetail({
   useEffect(() => onEditingChange?.(editing), [editing, onEditingChange]);
 
   // iOS Safari doesn't shrink 100dvh when the on-screen keyboard opens, so a
-  // full-bleed mobile editor sized off it would sit half behind the keyboard.
-  // visualViewport does shrink, so --vvh (read by the mobile CSS) tracks it
-  // instead while editing; Android's own fix is the layout's viewport export.
+  // full-bleed mobile editor sized off it would sit half behind the keyboard —
+  // and doesn't move the layout viewport either, so a centered fixed sheet can
+  // end up sitting under the keyboard even once it's the right height.
+  // visualViewport shrinks and offsets correctly, so --vvh/--vvt (read by the
+  // mobile CSS) track it instead while editing; Android's own fix is the
+  // layout's viewport export. `scroll` fires as the visual viewport pans while
+  // the keyboard animates open/closed, not just once it settles — `resize`
+  // alone misses that.
   useEffect(() => {
     const vv = window.visualViewport;
     if (!editing || !vv) return;
     const root = document.documentElement;
-    const update = () => root.style.setProperty("--vvh", `${vv.height}px`);
+    const update = () => {
+      root.style.setProperty("--vvh", `${vv.height}px`);
+      root.style.setProperty("--vvt", `${vv.offsetTop}px`);
+    };
     update();
     vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
     return () => {
       vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
       root.style.removeProperty("--vvh");
+      root.style.removeProperty("--vvt");
     };
   }, [editing]);
 
   // Catches up whenever the prop eventually does (an external change, a pin
   // toggle's refresh, first mount) — but our own save() already moved `latest`
   // ahead of the prop the moment it got a response, so this never has to be
-  // the first to know.
+  // the first to know. Guarded by updated_at: two saves fired close together
+  // can have their router.refresh() results land out of order, and an older
+  // one arriving after a newer save must not drag `latest` backwards.
   useEffect(() => {
+    if (note.updated_at < latestUpdatedAt) return;
     setLatest(note.body);
-  }, [note.body]);
+    setLatestUpdatedAt(note.updated_at);
+  }, [note.body, note.updated_at, latestUpdatedAt]);
 
   // autoFocus alone tends to land the caret at the start of a pre-filled field;
   // editing a note is almost always adding to the end, so put it there explicitly.
@@ -197,6 +217,7 @@ export default function NoteDetail({
       if (res.status === 409) {
         const { current } = await res.json();
         setLatest(current.body);
+        setLatestUpdatedAt(current.updated_at);
         // A retry whose earlier response got lost looks identical to a real
         // conflict from here — but if the stored text already matches what we
         // just tried to save, our save landed; there is nothing to resolve.
@@ -215,11 +236,18 @@ export default function NoteDetail({
       }
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setConflict({ kind: "network", message: data?.error });
+        const raw: string | undefined = data?.error;
+        const message = raw ? raw[0].toUpperCase() + raw.slice(1) + "." : "Could not save.";
+        // A validation rejection (bad shape, too long) fails the exact same way
+        // again with the exact same draft — Retry only makes sense for the
+        // transient failures a 5xx or a dropped connection stand for.
+        const retryable = res.status !== 400 && res.status !== 413;
+        setConflict({ kind: "network", message, retryable });
         return;
       }
       const { note: saved } = await res.json();
       setLatest(saved.body);
+      setLatestUpdatedAt(saved.updated_at);
       setConflict(null);
       setEditing(false);
       router.refresh();
@@ -263,6 +291,7 @@ export default function NoteDetail({
   function discardMine(current: Note) {
     setBody(current.body);
     setLatest(current.body);
+    setLatestUpdatedAt(current.updated_at);
     setConflict(null);
     setEditing(false);
     router.refresh();
@@ -367,11 +396,13 @@ export default function NoteDetail({
               <p className="conflict-msg">
                 {conflict.message ?? "Could not reach the server."} Your draft is still here.
               </p>
-              <div className="conflict-actions">
-                <button className="btn primary" onClick={() => save()} disabled={busy}>
-                  Retry
-                </button>
-              </div>
+              {conflict.retryable !== false && (
+                <div className="conflict-actions">
+                  <button className="btn primary" onClick={() => save()} disabled={busy}>
+                    Retry
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

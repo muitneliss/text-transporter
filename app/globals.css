@@ -1333,20 +1333,52 @@ textarea.field {
    the modal and the permalink page. `width` uses a percentage rather than a
    viewport unit so it respects each context's own containing box (the
    backdrop's padding, or .wrap on the permalink page) instead of overflowing
-   it — a fixed vw figure doesn't know about either. */
+   it — a fixed vw figure doesn't know about either. `overflow-y: auto` is the
+   backstop for every case below where a tall textarea floor plus a long
+   conflict panel add up to more than the cap allows — the card scrolls
+   internally instead of breaking out of its own rounded corners. */
 .sheet:has(> textarea.field) {
   width: min(960px, 100%);
   max-width: none;
   height: min(88vh, 900px);
   max-height: min(88vh, 900px);
+  overflow-y: auto;
+}
+
+/* The permalink page flows under its own header rather than acting as a
+   bounded dialog, so it isn't forced to a fixed height the way the modal
+   is — just capped, same as before, with the textarea's own floor below
+   (plus overflow-y above) doing the actual squeeze-prevention work. */
+.sheet.page:has(> textarea.field) {
+  height: auto;
 }
 
 /* A floor that holds regardless of whether a conflict panel is also taking
-   space below the textarea: flex:1 only has room to distribute because the
-   sheet above now has a real `height`, not just a cap, so this isn't fighting
-   the layout to stay visible the way a plain 0 floor would. */
+   space below the textarea, so this isn't fighting the layout to stay
+   visible the way a plain 0 floor would. */
 .sheet:has(> textarea.field) > textarea.field {
   min-height: clamp(8rem, 30vh, 24rem);
+}
+
+/* The textarea suppresses its own outline (inherited from the base .field
+   rule); the paper shows focus instead, on whichever control inside the
+   sheet currently has it. --paper-ink is each theme's ink color, chosen for
+   contrast against both its own paper and the page background already. */
+.sheet:has(> textarea.field):focus-within {
+  outline: 2px solid var(--paper-ink);
+  outline-offset: 2px;
+}
+
+/* ---- edit mode types directly on the paper: no boxed-input look. The
+   conflict panel keeps its own box (see .conflict above) since it's a
+   separate region, not the editor itself. The extra right padding matches
+   .sheet > .field's own (clearing .sheet-close) rather than dropping it —
+   only the other three sides go flush with the paper's padding. */
+.sheet .field {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0 30px 0 0;
 }
 
 @media (max-width: 480px) {
@@ -1362,8 +1394,15 @@ textarea.field {
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* --vvt (visualViewport.offsetTop) follows the keyboard on iOS, where the
+     layout viewport doesn't shrink and a centered fixed sheet would end up
+     sitting half under it; flex-start plus a live top keeps the sheet
+     anchored to the visible region instead. */
   .backdrop.editing {
     padding: 0;
+    align-items: flex-start;
+    top: var(--vvt, 0px);
+    height: var(--vvh, 100dvh);
   }
 
   /* The permalink page keeps flowing under its header rather than going
@@ -1378,29 +1417,11 @@ textarea.field {
     background: inherit;
     padding-top: 10px;
   }
-}
 
-/* ---- edit mode types directly on the paper: no boxed-input look. The
-   conflict panel keeps its own box (see .conflict above) since it's a
-   separate region, not the editor itself. ---- */
-.sheet .field,
-.expand .field {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-/* The textarea suppresses its own outline (inherited from the base .field
-   rule); the paper shows focus instead, on whichever control inside the
-   sheet currently has it. --paper-ink is each theme's ink color, chosen for
-   contrast against both its own paper and the page background already. */
-.sheet:has(> textarea.field):focus-within {
-  outline: 2px solid var(--paper-ink);
-  outline-offset: 2px;
-}
-
-.expand-reader:has(.field):focus-within {
-  outline: 2px solid var(--paper-ink);
-  outline-offset: -2px;
+  /* A positive offset would land outside the viewport once the modal goes
+     full-bleed (no backdrop margin left to show it in), so the ring goes
+     inset here instead of just past the edge. */
+  .sheet:has(> textarea.field):focus-within {
+    outline-offset: -4px;
+  }
 }
