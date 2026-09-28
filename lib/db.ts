@@ -112,13 +112,47 @@ export function createNote(owner: string, body: string, color: string): Note {
   return note;
 }
 
-export function updateNote(id: string, body: string): Note | null {
-  db().prepare("UPDATE notes SET body = ?, updated_at = ? WHERE id = ?").run(
-    body,
-    Date.now(),
-    id
-  );
-  return getNote(id);
+export type UpdateBodyResult =
+  | { ok: true; note: Note }
+  | { conflict: true; current: Note }
+  | { notFound: true };
+
+/**
+ * Compare-and-swap on the body only: pin/color changes must never trip a
+ * conflict, and saving back the same text is harmless, so `updated_at` and
+ * every other column are deliberately left out of the comparison.
+ * `baseBody` undefined skips the check entirely, for callers that predate it.
+ */
+export function updateNoteBody(id: string, baseBody: string | undefined, body: string): UpdateBodyResult {
+  const conn = db();
+  conn.exec("BEGIN IMMEDIATE");
+  try {
+    const row = conn.prepare("SELECT * FROM notes WHERE id = ?").get(id) as
+      | Record<string, unknown>
+      | undefined;
+    if (!row) {
+      conn.exec("ROLLBACK");
+      return { notFound: true };
+    }
+    const current = toNote(row);
+    if (baseBody !== undefined && current.body !== baseBody) {
+      conn.exec("ROLLBACK");
+      return { conflict: true, current };
+    }
+    conn.prepare("UPDATE notes SET body = ?, updated_at = ? WHERE id = ?").run(
+      body,
+      Date.now(),
+      id
+    );
+    conn.exec("COMMIT");
+    return { ok: true, note: getNote(id)! };
+  } catch (err) {
+    // A failed BEGIN or COMMIT can land here with no transaction actually open;
+    // rolling back anyway would throw its own "no transaction is active" error
+    // and bury the real one.
+    if (conn.isTransaction) conn.exec("ROLLBACK");
+    throw err;
+  }
 }
 
 /**

@@ -59,7 +59,7 @@ export default function NoteModal({
 
   return (
     <div
-      className="backdrop"
+      className={editing ? "backdrop editing" : "backdrop"}
       // mousedown, not click: a selection that starts on the note and ends out
       // here should not count as clicking away.
       onMouseDown={(e) => {
