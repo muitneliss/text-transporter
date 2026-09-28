@@ -45,7 +45,7 @@ export default function PinButton({
 
   return (
     <button
-      className={label ? "btn icon-only" : "pin"}
+      className={label ? "btn icon-only" : "pin tip-left"}
       onClick={toggle}
       disabled={busy}
       aria-pressed={pinned}

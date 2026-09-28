@@ -17,9 +17,18 @@
   --paper-green: #bddbbe;
   --paper-purple: #d5cbe7;
 
+  /* A card edge distinct from the desk behind it: the light papers are only
+     ~1.1-1.3:1 against --bg, so the drop shadow alone doesn't read as an edge.
+     Derived from --text so it re-resolves correctly in dark mode too. */
+  --paper-yellow-border: color-mix(in srgb, var(--paper-yellow) 75%, var(--text));
+  --paper-pink-border: color-mix(in srgb, var(--paper-pink) 75%, var(--text));
+  --paper-blue-border: color-mix(in srgb, var(--paper-blue) 75%, var(--text));
+  --paper-green-border: color-mix(in srgb, var(--paper-green) 75%, var(--text));
+  --paper-purple-border: color-mix(in srgb, var(--paper-purple) 75%, var(--text));
+
   --paper-ink: #1c1c1c;
   --paper-muted: rgba(28, 28, 28, 0.71);
-  --paper-faint: rgba(28, 28, 28, 0.52);
+  --paper-faint: rgba(28, 28, 28, 0.68);
   --paper-line: rgba(28, 28, 28, 0.18);
   --paper-link: #0f4c96;
   --paper-well: rgba(0, 0, 0, 0.06);
@@ -31,7 +40,10 @@
   --tape-bg: rgba(255, 255, 255, 0.6);
   --tape-border: rgba(0, 0, 0, 0.08);
 
-  --code-panel: rgba(0, 0, 0, 0.45);
+  /* Opaque and fixed in both themes: a translucent panel would inherit the
+     paper's lightness underneath it and lose contrast against the tk-* token
+     colors (all tuned for this exact background, One Dark's). */
+  --code-panel: #282c34;
   --code-panel-border: rgba(255, 255, 255, 0.12);
   --code-ink: #f1efe8;
 
@@ -65,7 +77,7 @@
 
     --paper-ink: #f2ede2;
     --paper-muted: rgba(242, 237, 226, 0.8);
-    --paper-faint: rgba(242, 237, 226, 0.55);
+    --paper-faint: rgba(242, 237, 226, 0.68);
     --paper-line: rgba(242, 237, 226, 0.2);
     --paper-link: #8ec2ff;
     --paper-well: rgba(255, 255, 255, 0.08);
@@ -99,10 +111,6 @@ body {
   min-height: 100%;
   color: var(--text);
   font: 15px/1.5 var(--font-sans);
-  /* A hidden [data-tip] tooltip is absolutely positioned and off-screen-wide
-     (nowrap text centered on a small button), so it still counts toward
-     scrollable overflow near a viewport edge even while invisible. */
-  overflow-x: hidden;
 }
 
 html {
@@ -408,17 +416,16 @@ textarea.field {
   border-radius: var(--radius-md);
   padding: 16px;
   box-shadow: var(--paper-shadow);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
 
+/* The sticky note IS the input: no nested box, so text sits directly on the
+   paper. Focus shows on the note itself (below) instead of this field. */
 .composer .field {
-  background: var(--paper-well);
-  border: 1px solid var(--paper-well-border);
+  background: transparent;
+  border: 0;
+  padding: 0;
   color: inherit;
-}
-
-.composer .field:focus {
-  border-color: currentColor;
 }
 
 .composer .field::placeholder {
@@ -431,11 +438,25 @@ textarea.field {
   overflow: auto;
 }
 
+/* The field lost its own focus ring above, so the whole note shows one
+   instead. Ink-colored rather than the global accent, which can clash with
+   the note's own paper color. */
+.composer:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 /* Ink-colored rather than the global accent ring, which can clash with the
    note's own paper color. */
 .composer-preview:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
+}
+
+/* The composer paper already rings itself via :focus-within above; skip the
+   duplicate inner ring so Preview has no inner box either. */
+.composer .composer-preview:focus-visible {
+  outline: none;
 }
 
 .composer-controls {
@@ -588,6 +609,7 @@ textarea.field {
   position: relative;
   display: flex;
   flex-direction: column;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: 16px;
   min-width: 0;
@@ -623,9 +645,9 @@ textarea.field {
     box-shadow: var(--paper-shadow-hover);
   }
 
-  /* A 360px-wide card nearly fills the grid column on a narrow phone, so the
-     tilt's rotated bounding box would overflow the viewport. Keep it flat
-     below the width where a single column takes over. */
+  /* Below ~480px a card spans nearly the full viewport width (the grid stays
+     single-column up to about 770px, but only gets this narrow under 480px),
+     so the tilt's rotated bounding box would overflow. Keep it flat there. */
   @media (max-width: 480px) {
     .grid .note:nth-child(4n),
     .grid .note:nth-child(4n + 1),
@@ -721,7 +743,7 @@ textarea.field {
   border: 0;
   border-radius: var(--radius-sm);
   color: inherit;
-  opacity: 0.5;
+  opacity: 0.58;
   cursor: pointer;
   transition: opacity 0.12s ease, background 0.12s ease;
 }
@@ -989,7 +1011,7 @@ textarea.field {
   padding: 0;
   color: rgba(255, 255, 255, 0.65);
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.32);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease;
@@ -1047,7 +1069,7 @@ textarea.field {
 }
 
 .tk-tag {
-  color: #e06c75;
+  color: #e4767f;
 }
 
 /* ---- note modal ---- */
