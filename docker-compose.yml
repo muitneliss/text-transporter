@@ -1,8 +1,7 @@
 services:
   text-transporter:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/muitneliss/text-transporter:latest
+    pull_policy: always
     restart: unless-stopped
     environment:
       # SQLite file lives here; must match the mounted volume below.
