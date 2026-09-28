@@ -147,7 +147,10 @@ export function updateNoteBody(id: string, baseBody: string | undefined, body: s
     conn.exec("COMMIT");
     return { ok: true, note: getNote(id)! };
   } catch (err) {
-    conn.exec("ROLLBACK");
+    // A failed BEGIN or COMMIT can land here with no transaction actually open;
+    // rolling back anyway would throw its own "no transaction is active" error
+    // and bury the real one.
+    if (conn.isTransaction) conn.exec("ROLLBACK");
     throw err;
   }
 }

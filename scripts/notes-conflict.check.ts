@@ -41,4 +41,23 @@ const { createNote, getNote, setPinned, updateNoteBody } = await import("../lib/
   assert.equal(getNote(note.id)?.pinned, true);
 }
 
+// No baseBody (older/other callers): applies unconditionally, no conflict check.
+{
+  const note = createNote("tester", "some body", "yellow");
+  const result = updateNoteBody(note.id, undefined, "overwrite without a base");
+  assert.ok("ok" in result && result.ok, "omitting baseBody must skip the conflict check");
+  assert.equal(getNote(note.id)?.body, "overwrite without a base");
+}
+
+// A thrown error mid-transaction must not leave a stuck lock: the rollback
+// still fires (guarded by conn.isTransaction, not blind), and the next call
+// against the same note succeeds normally rather than hanging or erroring.
+{
+  const note = createNote("tester", "before throw", "yellow");
+  assert.throws(() => updateNoteBody(note.id, "before throw", undefined as unknown as string));
+  const result = updateNoteBody(note.id, "before throw", "recovered");
+  assert.ok("ok" in result && result.ok, "a later call must still work after a mid-transaction throw");
+  assert.equal(getNote(note.id)?.body, "recovered");
+}
+
 console.log("notes-conflict.check.ts: all checks passed");

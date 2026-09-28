@@ -19,9 +19,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
   if (!getNote(id)) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  if (pinned !== undefined) setPinned(id, Boolean(pinned));
-
+  // No body means this is purely a pin/color-style request: nothing else has
+  // to succeed first, so applying it here is already as late as it can be.
   if (body === undefined) {
+    if (pinned !== undefined) setPinned(id, Boolean(pinned));
     return NextResponse.json({ note: getNote(id) });
   }
 
@@ -41,7 +42,11 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if ("notFound" in result) return NextResponse.json({ error: "not found" }, { status: 404 });
   if ("conflict" in result)
     return NextResponse.json({ error: "conflict", current: result.current }, { status: 409 });
-  return NextResponse.json({ note: result.note });
+
+  // A combined request only pins once the body it rode in on actually landed —
+  // a rejected or conflicting body must never leave a side effect behind.
+  if (pinned !== undefined) setPinned(id, Boolean(pinned));
+  return NextResponse.json({ note: pinned !== undefined ? getNote(id) : result.note });
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {

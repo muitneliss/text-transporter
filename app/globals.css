@@ -1310,10 +1310,11 @@ textarea.field {
 
 .conflict-body {
   margin: 0;
-  max-height: 220px;
+  max-height: 30vh;
   overflow: auto;
   padding: 10px 12px;
-  background: var(--paper-well-border);
+  background: var(--paper-well);
+  border: 1px solid var(--paper-well-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 13px;
@@ -1329,38 +1330,40 @@ textarea.field {
 }
 
 /* ---- roomy editor: the sheet grows while a note is being edited, on both
-   the modal and the permalink page ---- */
+   the modal and the permalink page. `width` uses a percentage rather than a
+   viewport unit so it respects each context's own containing box (the
+   backdrop's padding, or .wrap on the permalink page) instead of overflowing
+   it — a fixed vw figure doesn't know about either. */
 .sheet:has(> textarea.field) {
-  width: min(960px, 94vw);
+  width: min(960px, 100%);
   max-width: none;
+  height: min(88vh, 900px);
   max-height: min(88vh, 900px);
 }
 
+/* A floor that holds regardless of whether a conflict panel is also taking
+   space below the textarea: flex:1 only has room to distribute because the
+   sheet above now has a real `height`, not just a cap, so this isn't fighting
+   the layout to stay visible the way a plain 0 floor would. */
 .sheet:has(> textarea.field) > textarea.field {
-  min-height: 60vh;
-}
-
-/* A conflict panel takes its own space below the textarea; let the textarea
-   give room back rather than forcing 60vh and pushing the panel out of view. */
-.sheet:has(> textarea.field):has(> .conflict) > textarea.field {
-  min-height: 0;
+  min-height: clamp(8rem, 30vh, 24rem);
 }
 
 @media (max-width: 480px) {
+  /* iOS Safari doesn't shrink 100dvh for the keyboard; --vvh (set from
+     window.visualViewport in NoteDetail while editing) does, and resizes
+     live as the keyboard opens and closes. Falls back to 100dvh when unset
+     (Android, or before the effect has run). */
   .sheet:not(.page):has(> textarea.field) {
     width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: var(--vvh, 100dvh);
+    max-height: var(--vvh, 100dvh);
     border-radius: 0;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
-  .backdrop:has(.sheet:not(.page):has(> textarea.field)) {
+  .backdrop.editing {
     padding: 0;
-  }
-
-  .sheet:not(.page):has(> textarea.field) > textarea.field {
-    min-height: 0;
   }
 
   /* The permalink page keeps flowing under its header rather than going
@@ -1375,4 +1378,29 @@ textarea.field {
     background: inherit;
     padding-top: 10px;
   }
+}
+
+/* ---- edit mode types directly on the paper: no boxed-input look. The
+   conflict panel keeps its own box (see .conflict above) since it's a
+   separate region, not the editor itself. ---- */
+.sheet .field,
+.expand .field {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* The textarea suppresses its own outline (inherited from the base .field
+   rule); the paper shows focus instead, on whichever control inside the
+   sheet currently has it. --paper-ink is each theme's ink color, chosen for
+   contrast against both its own paper and the page background already. */
+.sheet:has(> textarea.field):focus-within {
+  outline: 2px solid var(--paper-ink);
+  outline-offset: 2px;
+}
+
+.expand-reader:has(.field):focus-within {
+  outline: 2px solid var(--paper-ink);
+  outline-offset: -2px;
 }
