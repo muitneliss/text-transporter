@@ -11,15 +11,24 @@
   --accent-contrast: #fffdfa;
   --danger: #b3261e;
 
-  --paper-yellow: #f7d774;
-  --paper-pink: #f2a1b6;
-  --paper-blue: #9bc4f0;
-  --paper-green: #a5d9a8;
-  --paper-purple: #c3aae6;
+  --paper-yellow: #eddebb;
+  --paper-pink: #eccad0;
+  --paper-blue: #c2d8eb;
+  --paper-green: #bddbbe;
+  --paper-purple: #d5cbe7;
+
+  /* A card edge distinct from the desk behind it: the light papers are only
+     ~1.1-1.3:1 against --bg, so the drop shadow alone doesn't read as an edge.
+     Derived from --text so it re-resolves correctly in dark mode too. */
+  --paper-yellow-border: color-mix(in srgb, var(--paper-yellow) 75%, var(--text));
+  --paper-pink-border: color-mix(in srgb, var(--paper-pink) 75%, var(--text));
+  --paper-blue-border: color-mix(in srgb, var(--paper-blue) 75%, var(--text));
+  --paper-green-border: color-mix(in srgb, var(--paper-green) 75%, var(--text));
+  --paper-purple-border: color-mix(in srgb, var(--paper-purple) 75%, var(--text));
 
   --paper-ink: #1c1c1c;
-  --paper-muted: rgba(28, 28, 28, 0.62);
-  --paper-faint: rgba(28, 28, 28, 0.48);
+  --paper-muted: rgba(28, 28, 28, 0.71);
+  --paper-faint: rgba(28, 28, 28, 0.68);
   --paper-line: rgba(28, 28, 28, 0.18);
   --paper-link: #0f4c96;
   --paper-well: rgba(0, 0, 0, 0.06);
@@ -31,7 +40,10 @@
   --tape-bg: rgba(255, 255, 255, 0.6);
   --tape-border: rgba(0, 0, 0, 0.08);
 
-  --code-panel: rgba(0, 0, 0, 0.45);
+  /* Opaque and fixed in both themes: a translucent panel would inherit the
+     paper's lightness underneath it and lose contrast against the tk-* token
+     colors (all tuned for this exact background, One Dark's). */
+  --code-panel: #282c34;
   --code-panel-border: rgba(255, 255, 255, 0.12);
   --code-ink: #f1efe8;
 
@@ -57,15 +69,15 @@
     --accent-contrast: #1c1508;
     --danger: #f2867a;
 
-    --paper-yellow: #4d3d1c;
-    --paper-pink: #4d2a3a;
-    --paper-blue: #253a52;
-    --paper-green: #274a30;
-    --paper-purple: #3d2f57;
+    --paper-yellow: #50452b;
+    --paper-pink: #55303c;
+    --paper-blue: #2b3e54;
+    --paper-green: #2b462f;
+    --paper-purple: #403357;
 
     --paper-ink: #f2ede2;
-    --paper-muted: rgba(242, 237, 226, 0.68);
-    --paper-faint: rgba(242, 237, 226, 0.5);
+    --paper-muted: rgba(242, 237, 226, 0.8);
+    --paper-faint: rgba(242, 237, 226, 0.68);
     --paper-line: rgba(242, 237, 226, 0.2);
     --paper-link: #8ec2ff;
     --paper-well: rgba(255, 255, 255, 0.08);
@@ -400,20 +412,20 @@ textarea.field {
 /* ---- composer: a blank sticky note in the chosen color ---- */
 .composer {
   color: var(--paper-ink);
+  border: 1px solid var(--paper-well-border);
   border-radius: var(--radius-md);
   padding: 16px;
   box-shadow: var(--paper-shadow);
   transition: background 0.15s ease;
 }
 
+/* The sticky note IS the input: no nested box, so text sits directly on the
+   paper. Focus shows on the note itself (below) instead of this field. */
 .composer .field {
-  background: var(--paper-well);
-  border: 1px solid var(--paper-well-border);
+  background: transparent;
+  border: 0;
+  padding: 0;
   color: inherit;
-}
-
-.composer .field:focus {
-  border-color: currentColor;
 }
 
 .composer .field::placeholder {
@@ -426,11 +438,31 @@ textarea.field {
   overflow: auto;
 }
 
+/* --text-muted (the global .muted color) is tuned for the desk background,
+   not the note's paper tint underneath this placeholder. */
+.composer .muted {
+  color: var(--paper-muted);
+}
+
+/* The field lost its own focus ring above, so the whole note shows one
+   instead. Ink-colored rather than the global accent, which can clash with
+   the note's own paper color. */
+.composer:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 /* Ink-colored rather than the global accent ring, which can clash with the
    note's own paper color. */
 .composer-preview:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
+}
+
+/* The composer paper already rings itself via :focus-within above; skip the
+   duplicate inner ring so Preview has no inner box either. */
+.composer .composer-preview:focus-visible {
+  outline: none;
 }
 
 .composer-controls {
@@ -445,7 +477,15 @@ textarea.field {
 .composer-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  column-gap: 10px;
+}
+
+/* Pinned to the end of its own flex line even when the row above wraps, so
+   Save stays right-aligned instead of trailing after the hint text. */
+.composer-actions > .btn.primary {
+  margin-left: auto;
 }
 
 .composer-actions .seg {
@@ -575,7 +615,7 @@ textarea.field {
 /* ---- note grid ---- */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
   gap: 18px;
 }
 
@@ -583,8 +623,10 @@ textarea.field {
   position: relative;
   display: flex;
   flex-direction: column;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: 16px;
+  min-width: 0;
   min-height: 150px;
   color: var(--paper-ink);
   box-shadow: var(--paper-shadow);
@@ -615,6 +657,18 @@ textarea.field {
   .note:focus-within {
     transform: rotate(0deg) translateY(-3px);
     box-shadow: var(--paper-shadow-hover);
+  }
+
+  /* Below ~480px a card spans nearly the full viewport width (the grid stays
+     single-column up to about 770px, but only gets this narrow under 480px),
+     so the tilt's rotated bounding box would overflow. Keep it flat there. */
+  @media (max-width: 480px) {
+    .grid .note:nth-child(4n),
+    .grid .note:nth-child(4n + 1),
+    .grid .note:nth-child(4n + 2),
+    .grid .note:nth-child(4n + 3) {
+      transform: none;
+    }
   }
 }
 
@@ -703,7 +757,7 @@ textarea.field {
   border: 0;
   border-radius: var(--radius-sm);
   color: inherit;
-  opacity: 0.5;
+  opacity: 0.58;
   cursor: pointer;
   transition: opacity 0.12s ease, background 0.12s ease;
 }
@@ -971,7 +1025,7 @@ textarea.field {
   padding: 0;
   color: rgba(255, 255, 255, 0.65);
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease;
@@ -1029,7 +1083,7 @@ textarea.field {
 }
 
 .tk-tag {
-  color: #e06c75;
+  color: #e4767f;
 }
 
 /* ---- note modal ---- */

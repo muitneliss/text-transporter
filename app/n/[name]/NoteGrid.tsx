@@ -33,7 +33,10 @@ export default function NoteGrid({
           <article
             key={n.id}
             className={n.pinned ? "note pinned" : "note"}
-            style={{ background: `var(--paper-${n.color})` }}
+            style={{
+              background: `var(--paper-${n.color})`,
+              borderColor: `var(--paper-${n.color}-border)`,
+            }}
           >
             {/* Covers the whole tile so the card stays one click target, while
                 leaving the pin button outside the anchor. It keeps a real href
