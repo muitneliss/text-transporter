@@ -221,10 +221,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/deploy" \
-            -f sha="$GITHUB_SHA" -F force=true >/dev/null 2>&1; then
+          if error=$(gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/deploy" \
+            -f sha="$GITHUB_SHA" -F force=true 2>&1 >/dev/null); then
             echo "moved existing deploy tag"
-          else
+          elif [[ "$error" == *"HTTP 404"* ]]; then
             gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
               -f ref=refs/tags/deploy -f sha="$GITHUB_SHA"
+          else
+            echo "$error" >&2
+            exit 1
           fi
