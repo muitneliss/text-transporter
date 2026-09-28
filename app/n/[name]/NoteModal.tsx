@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Note } from "@/lib/db";
+import { XIcon } from "@/lib/icons";
 import NoteDetail from "./NoteDetail";
 
 export default function NoteModal({
@@ -38,9 +39,12 @@ export default function NoteModal({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      // Escape belongs to the textarea while typing, not to the dialog.
+      // Escape blurs a focused field first rather than closing the dialog under it.
       const el = document.activeElement;
-      if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) return;
+      if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+        el.blur();
+        return;
+      }
       // ...nor to the sheet while the expanded reader is up. That is a modal <dialog>,
       // so the same keypress is already closing it; without this the one Escape would
       // dismiss the reader and the sheet underneath it together.
@@ -65,21 +69,19 @@ export default function NoteModal({
       <div
         ref={sheet}
         className="sheet"
-        style={{ background: `var(--${note.color})` }}
+        style={{ background: `var(--paper-${note.color})` }}
         role="dialog"
         aria-modal="true"
         aria-label={note.body.trim().split("\n")[0]}
         tabIndex={-1}
       >
-        <button className="sheet-close" onClick={tryClose} aria-label="Close note">
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-            <path
-              d="M4 4 L12 12 M12 4 L4 12"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
+        <button
+          className="sheet-close tip-below tip-left"
+          onClick={tryClose}
+          aria-label="Close note"
+          data-tip="Close (Esc)"
+        >
+          <XIcon className="icon" />
         </button>
 
         {/* Keyed so switching notes rebuilds the editor rather than carrying

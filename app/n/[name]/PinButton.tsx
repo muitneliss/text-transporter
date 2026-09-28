@@ -2,32 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-function PinIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-      <circle
-        cx="8"
-        cy="5.4"
-        r="3.4"
-        fill={filled ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M8 8.8 V14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+import { PinIcon } from "@/lib/icons";
 
 /**
- * Used bare on the board tiles and with a label in the note's button bar.
- * On a tile it sits on top of the link that covers the card, so the click has
- * to be stopped from opening the note.
+ * Used bare on the board tiles and inside the note's button bar (icon-only in
+ * both places). On a tile it sits on top of the link that covers the card, so
+ * the click has to be stopped from opening the note.
  */
 export default function PinButton({
   id,
@@ -61,17 +41,18 @@ export default function PinButton({
     }
   }
 
+  const text = pinned ? "Unpin note" : "Pin note to top";
+
   return (
     <button
-      className={label ? "btn with-icon" : "pin"}
+      className={label ? "btn icon-only" : "pin"}
       onClick={toggle}
       disabled={busy}
       aria-pressed={pinned}
-      aria-label={pinned ? "Unpin note" : "Pin note to the top"}
-      title={pinned ? "Unpin" : "Pin to top"}
+      aria-label={text}
+      data-tip={text}
     >
-      <PinIcon filled={pinned} />
-      {label && <span>{pinned ? "Pinned" : "Pin"}</span>}
+      <PinIcon className="icon" filled={pinned} />
     </button>
   );
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { listNotes, normalizeOwner } from "@/lib/db";
-import Composer from "./Composer";
-import NoteGrid from "./NoteGrid";
+import Board from "./Board";
 
 export const dynamic = "force-dynamic";
 
@@ -28,15 +27,7 @@ export default async function BoardPage({
         </Link>
       </div>
 
-      <Composer owner={owner} />
-
-      <hr className="divider" />
-
-      {notes.length === 0 ? (
-        <div className="empty">Nothing here yet. Paste something above.</div>
-      ) : (
-        <NoteGrid notes={notes} owner={owner} />
-      )}
+      <Board owner={owner} notes={notes} />
     </main>
   );
 }

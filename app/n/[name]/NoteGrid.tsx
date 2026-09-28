@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import type { Note } from "@/lib/db";
 import PinButton from "./PinButton";
-import NoteModal from "./NoteModal";
 
 function preview(body: string) {
   return body.length > 400 ? body.slice(0, 400) + "…" : body;
@@ -21,54 +19,44 @@ function splitTitle(body: string) {
 export default function NoteGrid({
   notes,
   owner,
+  onOpen,
 }: {
   notes: Note[];
   owner: string;
+  onOpen: (id: string) => void;
 }) {
-  const [openId, setOpenId] = useState<string | null>(null);
-
-  // Looked up rather than copied, so an edit, a pin or a delete on the server
-  // flows straight back into the open sheet — and closes it when the note goes.
-  const open = notes.find((n) => n.id === openId) ?? null;
-
   return (
-    <>
-      <div className="grid">
-        {notes.map((n) => {
-          const { title, rest } = splitTitle(n.body);
-          return (
-            <article
-              key={n.id}
-              className={n.pinned ? "note pinned" : "note"}
-              style={{ background: `var(--${n.color})` }}
-            >
-              {/* Covers the whole tile so the card stays one click target, while
-                  leaving the pin button outside the anchor. It keeps a real href
-                  so the permalink still works in a new tab. */}
-              <Link
-                className="open"
-                href={`/n/${encodeURIComponent(owner)}/${n.id}`}
-                aria-label={title}
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                  e.preventDefault();
-                  setOpenId(n.id);
-                }}
-              />
-              <div className="title">{title}</div>
-              {rest && <pre>{preview(rest)}</pre>}
-              <div className="stamp">
-                {new Date(n.updated_at).toLocaleString()}
-              </div>
-              <PinButton id={n.id} pinned={n.pinned} />
-            </article>
-          );
-        })}
-      </div>
-
-      {open && (
-        <NoteModal note={open} owner={owner} onClose={() => setOpenId(null)} />
-      )}
-    </>
+    <div className="grid">
+      {notes.map((n) => {
+        const { title, rest } = splitTitle(n.body);
+        return (
+          <article
+            key={n.id}
+            className={n.pinned ? "note pinned" : "note"}
+            style={{ background: `var(--paper-${n.color})` }}
+          >
+            {/* Covers the whole tile so the card stays one click target, while
+                leaving the pin button outside the anchor. It keeps a real href
+                so the permalink still works in a new tab. */}
+            <Link
+              className="open"
+              href={`/n/${encodeURIComponent(owner)}/${n.id}`}
+              aria-label={title}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                onOpen(n.id);
+              }}
+            />
+            <PinButton id={n.id} pinned={n.pinned} />
+            <div className="title">{title}</div>
+            {rest && <pre>{preview(rest)}</pre>}
+            <div className="stamp">
+              {new Date(n.updated_at).toLocaleString()}
+            </div>
+          </article>
+        );
+      })}
+    </div>
   );
 }

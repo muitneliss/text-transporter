@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Note } from "@/lib/db";
 import Markdown from "@/lib/markdown";
+import { copyText } from "@/lib/clipboard";
+import { CopyIcon, CheckIcon, PencilIcon, TrashIcon, ExpandIcon, MinimizeIcon } from "@/lib/icons";
 import PinButton from "./PinButton";
 
 /**
@@ -94,13 +96,29 @@ export default function NoteDetail({
   }, []);
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(note.body);
-      setCopyTick((tick) => tick + 1);
-    } catch {
-      alert("Clipboard blocked — select the text and copy manually.");
-    }
+    const ok = await copyText(note.body);
+    if (ok) setCopyTick((tick) => tick + 1);
+    else alert("Clipboard blocked — select the text and copy manually.");
   }
+
+  // 'c' copies the open note, as long as focus isn't in a field and no
+  // modifier is held — same guard the board's own shortcuts use.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "c" || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (editing) return;
+      const el = document.activeElement;
+      if (
+        el instanceof HTMLTextAreaElement ||
+        el instanceof HTMLInputElement ||
+        (el as HTMLElement | null)?.isContentEditable
+      )
+        return;
+      copy();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [editing, note.body]);
 
   async function save() {
     if (!body.trim() || busy) return;
@@ -165,6 +183,10 @@ export default function NoteDetail({
         <pre>{note.body}</pre>
       )}
 
+      <span className="sr-only" aria-live="polite">
+        {copied ? "Copied" : ""}
+      </span>
+
       <div className="bar">
         {editing ? (
           <>
@@ -183,34 +205,49 @@ export default function NoteDetail({
           </>
         ) : (
           <>
-            <button className="btn primary" onClick={copy}>
-              {copied ? "Copied ✓" : "Copy"}
+            <button
+              className="btn primary icon-only"
+              onClick={copy}
+              aria-label={copied ? "Copied" : "Copy note"}
+              data-tip={copied ? "Copied" : "Copy note (c)"}
+            >
+              {copied ? <CheckIcon className="icon" /> : <CopyIcon className="icon" />}
             </button>
             {/* Editing exits the expanded view rather than merely outranking it: leaving
                 `expanded` set would let Cancel or Save hand the overlay straight back. */}
             <button
-              className="btn"
+              className="btn icon-only"
               onClick={() => {
                 setExpanded(false);
                 setEditing(true);
               }}
+              aria-label="Edit note"
+              data-tip="Edit note"
             >
-              Edit
+              <PencilIcon className="icon" />
             </button>
             <PinButton id={note.id} pinned={note.pinned} label />
-            <button className="btn danger" onClick={remove} disabled={busy}>
-              Delete
+            <button
+              className="btn danger icon-only"
+              onClick={remove}
+              disabled={busy}
+              aria-label="Delete note"
+              data-tip="Delete note"
+            >
+              <TrashIcon className="icon" />
             </button>
             {/* After Delete but before the toggle, which owns the right edge: every
                 existing control keeps the position muscle memory expects. */}
             {canExpand && (
               <button
-                className="btn"
+                className="btn icon-only"
                 ref={expandRef}
                 aria-haspopup="dialog"
+                aria-label="Expand note"
+                data-tip="Expand note"
                 onClick={() => setExpanded(true)}
               >
-                Expand
+                <ExpandIcon className="icon" />
               </button>
             )}
 
@@ -231,6 +268,7 @@ export default function NoteDetail({
           <dialog
             className="expand"
             ref={dialogRef}
+            style={{ background: `var(--paper-${note.color})` }}
             aria-label="Expanded note"
             // Escape asks to close here. Clearing the state — rather than letting the
             // dialog close itself and reporting it afterwards — keeps React the single
@@ -248,20 +286,37 @@ export default function NoteDetail({
           >
             {overlayOpen && (
               <>
-                <div className="expand-stripe" style={{ background: `var(--${note.color})` }} />
+                <div className="expand-stripe" />
+
+                {/* The other live region lives outside this dialog, which
+                    showModal() makes inert while open — screen readers won't
+                    reach it, so the announcement needs its own copy in here. */}
+                <span className="sr-only" aria-live="polite">
+                  {copied ? "Copied" : ""}
+                </span>
 
                 <div className="expand-bar">
                   <div className="expand-meta">
                     {note.body.length.toLocaleString()} characters · Esc closes
                   </div>
                   {viewToggle}
-                  <button className="btn primary" onClick={copy}>
-                    {copied ? "Copied ✓" : "Copy"}
+                  <button
+                    className="btn primary icon-only tip-below"
+                    onClick={copy}
+                    aria-label={copied ? "Copied" : "Copy note"}
+                    data-tip={copied ? "Copied" : "Copy note (c)"}
+                  >
+                    {copied ? <CheckIcon className="icon" /> : <CopyIcon className="icon" />}
                   </button>
                   {/* Clears the state and lets the effect close the dialog, rather than
                       closing the dialog and waiting to hear about it. */}
-                  <button className="btn" onClick={() => setExpanded(false)}>
-                    Close
+                  <button
+                    className="btn icon-only tip-below"
+                    onClick={() => setExpanded(false)}
+                    aria-label="Close expanded view"
+                    data-tip="Close (Esc)"
+                  >
+                    <MinimizeIcon className="icon" />
                   </button>
                 </div>
 

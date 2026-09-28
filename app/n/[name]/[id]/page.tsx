@@ -31,7 +31,7 @@ export default async function NotePage({
 
       {/* The same sheet of paper the board opens in a modal, sized to the page:
           opening a note by URL should not turn it grey. */}
-      <div className="sheet page" style={{ background: `var(--${note.color})` }}>
+      <div className="sheet page" style={{ background: `var(--paper-${note.color})` }}>
         <NoteDetail note={note} owner={owner} />
       </div>
     </main>
