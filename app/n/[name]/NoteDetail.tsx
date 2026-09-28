@@ -56,6 +56,7 @@ export default function NoteDetail({
   const readerRef = useRef<HTMLDivElement>(null);
   const readerScroll = useRef(0);
   const conflictRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const copied = copyTick > 0;
   /** One expression gates the overlay's markup and the effect that opens it, so
@@ -64,6 +65,17 @@ export default function NoteDetail({
 
   // Lets the modal know there are unsaved edits worth guarding.
   useEffect(() => onEditingChange?.(editing), [editing, onEditingChange]);
+
+  // autoFocus alone tends to land the caret at the start of a pre-filled field;
+  // editing a note is almost always adding to the end, so put it there explicitly.
+  useEffect(() => {
+    if (!editing) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    el.setSelectionRange(end, end);
+  }, [editing]);
 
   useEffect(() => {
     setCanExpand(
@@ -247,8 +259,8 @@ export default function NoteDetail({
       {editing ? (
         <textarea
           className="field"
+          ref={textareaRef}
           value={body}
-          autoFocus
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
