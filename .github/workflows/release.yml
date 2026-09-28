@@ -52,7 +52,7 @@ jobs:
 
   build-push:
     name: Build and push (${{ matrix.platform }})
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -86,6 +86,8 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short
@@ -121,7 +123,7 @@ jobs:
 
   merge:
     name: Merge and push manifest
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     needs: build-push
     runs-on: ubuntu-24.04
     permissions:
@@ -153,6 +155,8 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short
@@ -189,9 +193,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           IMAGE_REF: ${{ needs.merge.outputs.image }}:${{ needs.merge.outputs.version }}
         run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release exists, skipping"
+            exit 0
+          fi
+
+          prerelease_flag=()
+          case "$GITHUB_REF_NAME" in
+            *-*) prerelease_flag=(--prerelease) ;;
+          esac
+
           gh release create "$GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag \
+            "${prerelease_flag[@]}" \
             --notes "Image: \`$IMAGE_REF\`"
 
   deploy-hook:
@@ -210,4 +225,9 @@ jobs:
             echo "no webhook configured, skipping"
             exit 0
           fi
-          curl -fsS -X POST "$DOKPLOY_DEPLOY_WEBHOOK" -o /dev/null
+          code=$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST \
+            -H 'X-GitHub-Event: push' \
+            -H 'Content-Type: application/json' \
+            -d '{"ref":"refs/heads/main"}' \
+            "$DOKPLOY_DEPLOY_WEBHOOK")
+          [ "$code" = "200" ] || { echo "Dokploy webhook returned HTTP $code"; exit 1; }
