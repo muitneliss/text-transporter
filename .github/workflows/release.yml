@@ -209,25 +209,22 @@ jobs:
             "${prerelease_flag[@]}" \
             --notes "Image: \`$IMAGE_REF\`"
 
-  deploy-hook:
-    name: Trigger Dokploy redeploy
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  deploy-tag:
+    name: Move deploy tag
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: merge
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
     steps:
-      - name: Call Dokploy deploy webhook
+      - name: Force-point refs/tags/deploy at this commit
         env:
-          DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -z "$DOKPLOY_DEPLOY_WEBHOOK" ]; then
-            echo "no webhook configured, skipping"
-            exit 0
+          if gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/deploy" \
+            -f sha="$GITHUB_SHA" -F force=true >/dev/null 2>&1; then
+            echo "moved existing deploy tag"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref=refs/tags/deploy -f sha="$GITHUB_SHA"
           fi
-          code=$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST \
-            -H 'X-GitHub-Event: push' \
-            -H 'Content-Type: application/json' \
-            -d '{"ref":"refs/heads/main"}' \
-            "$DOKPLOY_DEPLOY_WEBHOOK")
-          [ "$code" = "200" ] || { echo "Dokploy webhook returned HTTP $code"; exit 1; }
