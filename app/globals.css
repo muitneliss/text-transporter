@@ -69,19 +69,19 @@
     --accent-contrast: #1c1508;
     --danger: #f2867a;
 
-    --paper-yellow: #6b5716;
-    --paper-pink: #7d3348;
-    --paper-blue: #27557f;
-    --paper-green: #286136;
-    --paper-purple: #553f8f;
+    --paper-yellow: #ecd494;
+    --paper-pink: #e9afbc;
+    --paper-blue: #a8c8e7;
+    --paper-green: #abd4ad;
+    --paper-purple: #c5b4e0;
 
-    --paper-ink: #f2ede2;
-    --paper-muted: rgba(242, 237, 226, 0.88);
-    --paper-faint: rgba(242, 237, 226, 0.82);
-    --paper-line: rgba(242, 237, 226, 0.2);
-    --paper-link: #b0d5ff;
-    --paper-well: rgba(0, 0, 0, 0.18);
-    --paper-well-border: rgba(0, 0, 0, 0.28);
+    --paper-ink: #1c1c1c;
+    --paper-muted: rgba(28, 28, 28, 0.78);
+    --paper-faint: rgba(28, 28, 28, 0.76);
+    --paper-line: rgba(28, 28, 28, 0.18);
+    --paper-link: #0b3d80;
+    --paper-well: rgba(0, 0, 0, 0.06);
+    --paper-well-border: rgba(0, 0, 0, 0.14);
 
     --paper-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 26px rgba(0, 0, 0, 0.55);
     --paper-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.55), 0 20px 38px rgba(0, 0, 0, 0.6);
@@ -90,12 +90,44 @@
     --tape-border: rgba(255, 255, 255, 0.1);
   }
 
+  /* The notes are light paper on a dark desk, so anything drawn on paper with a
+     desk token (light ink, amber ring) or a fixed opacity must be re-inked. */
   :root .md del {
     opacity: 1;
   }
 
   :root .sheet-close {
-    opacity: 0.8;
+    opacity: 0.7;
+  }
+
+  :root .composer {
+    --surface: #efe7d8;
+  }
+
+  :root .composer:focus-within {
+    outline-color: var(--text);
+  }
+
+  :root .sheet:has(> textarea.field):focus-within {
+    outline-color: var(--text);
+  }
+
+  :root .sheet :focus-visible,
+  :root .expand :focus-visible,
+  :root .note .pin:focus-visible {
+    outline-color: var(--paper-ink);
+  }
+
+  :root .sheet .btn.danger:hover,
+  :root .expand .btn.danger:hover {
+    border-color: #7f1a14;
+    color: #7f1a14;
+  }
+
+  @media (max-width: 480px) {
+    :root .sheet:has(> textarea.field):focus-within {
+      outline-color: var(--paper-ink);
+    }
   }
 }
 
