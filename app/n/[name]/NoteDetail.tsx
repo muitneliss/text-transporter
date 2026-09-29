@@ -9,28 +9,6 @@ import { copyText } from "@/lib/clipboard";
 import { CopyIcon, CheckIcon, PencilIcon, TrashIcon, ExpandIcon, MinimizeIcon } from "@/lib/icons";
 import PinButton from "./PinButton";
 
-/** Per-note view writes, kept outside the component so they survive the modal
- *  unmounting: a close-and-reopen right after a click still sees the new choice
- *  before `router.refresh()` has fed it back through the `note` prop, and the
- *  reopened instance can't start a second, racing write. */
-type ViewSync = {
-  /** What the server last told us it stored. */
-  confirmed: NoteView;
-  /** The user's latest click. */
-  desired: NoteView;
-  busy: boolean;
-  touched: number;
-  apply: (view: NoteView) => void;
-};
-const viewSync = new Map<string, ViewSync>();
-/** How long a local choice outranks the `note` prop; a refresh lands well inside it. */
-const VIEW_FRESH_MS = 10_000;
-
-function freshViewSync(id: string) {
-  const e = viewSync.get(id);
-  return e && (e.busy || Date.now() - e.touched < VIEW_FRESH_MS) ? e : undefined;
-}
-
 /**
  * The note's contents and controls, with no frame of its own: the board wraps it
  * in a sticky-shaped modal sheet, the permalink page wraps it in a panel.
@@ -65,9 +43,17 @@ export default function NoteDetail({
    *  yourself on the next Edit. Always moved together with `latest`. */
   const [latestUpdatedAt, setLatestUpdatedAt] = useState(note.updated_at);
   const [busy, setBusy] = useState(false);
-  const [rendered, setRendered] = useState(
-    (freshViewSync(note.id)?.desired ?? note.view) === "markdown"
-  );
+  const [rendered, setRendered] = useState(note.view === "markdown");
+  /** `confirmed` is unknown until a save succeeds, so the first click always writes; a fresh
+   *  `note.view` is adopted only while nothing is pending, so external changes heal on refresh. */
+  const viewRef = useRef<{
+    confirmed?: NoteView;
+    desired?: NoteView;
+    inFlight: boolean;
+    mounted: boolean;
+    prop: NoteView;
+  }>({ inFlight: false, mounted: false, prop: note.view });
+  viewRef.current.prop = note.view;
   const [expanded, setExpanded] = useState(false);
   /** Set only when a save/delete lands on a note someone else already changed.
    *  The draft in `body` is never touched by any of these — only the three
@@ -345,53 +331,49 @@ export default function NoteDetail({
   }
 
   useEffect(() => {
-    const e = viewSync.get(note.id);
-    if (e) e.apply = (v) => setRendered(v === "markdown");
-    if (freshViewSync(note.id)) return;
-    if (e) e.confirmed = e.desired = note.view;
+    const v = viewRef.current;
+    v.mounted = true;
+    return () => {
+      v.mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const v = viewRef.current;
+    if (v.inFlight || (v.desired !== undefined && v.desired !== v.confirmed)) return;
+    v.confirmed = v.desired = undefined;
     setRendered(note.view === "markdown");
-  }, [note.id, note.view]);
+  }, [note.view]);
 
-  /** Optimistic: flip now, then write. At most one PATCH per note is in flight and
-   *  it always sends the latest click, so the stored value ends up being the last
-   *  one chosen whatever order the network delivers things in. A failure puts back
-   *  the last value the server confirmed. */
-  function chooseView(next: boolean) {
-    const view: NoteView = next ? "markdown" : "text";
-    let e = viewSync.get(note.id);
-    if (!e) {
-      e = { confirmed: note.view, desired: note.view, busy: false, touched: 0, apply: () => {} };
-      viewSync.set(note.id, e);
-    }
-    e.apply = (v) => setRendered(v === "markdown");
-    e.desired = view;
-    e.touched = Date.now();
+  /** Optimistic: flip now, then write. At most one PATCH is in flight and it always
+   *  sends the latest click, so the stored value ends up being the last one chosen. */
+  async function chooseView(next: boolean) {
+    const v = viewRef.current;
+    v.desired = next ? "markdown" : "text";
     setRendered(next);
-    if (!e.busy) void flushView(note.id, e);
-  }
-
-  async function flushView(id: string, e: ViewSync) {
-    e.busy = true;
+    if (v.inFlight) return;
+    v.inFlight = true;
     try {
-      while (e.desired !== e.confirmed) {
-        const res = await fetch(`/api/notes/${id}`, {
+      while (v.desired !== undefined && v.desired !== v.confirmed) {
+        const res = await fetch(`/api/notes/${note.id}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ view: e.desired }),
+          body: JSON.stringify({ view: v.desired }),
         });
         if (!res.ok) throw new Error();
         const saved = (await res.json()).note?.view;
         if (saved !== "text" && saved !== "markdown") throw new Error();
-        e.confirmed = saved;
+        v.confirmed = saved;
       }
       router.refresh();
     } catch {
-      e.desired = e.confirmed;
-      e.apply(e.confirmed);
-      alert("Could not save the view.");
+      v.desired = v.confirmed;
+      if (v.mounted) {
+        setRendered((v.confirmed ?? v.prop) === "markdown");
+        alert("Could not save the view.");
+      }
     } finally {
-      e.busy = false;
-      e.touched = Date.now();
+      v.inFlight = false;
     }
   }
 
