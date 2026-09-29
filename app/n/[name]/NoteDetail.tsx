@@ -9,6 +9,7 @@ import Markdown from "@/lib/markdown";
 import { copyText } from "@/lib/clipboard";
 import { CopyIcon, CheckIcon, PencilIcon, TrashIcon, ExpandIcon, MinimizeIcon } from "@/lib/icons";
 import PinButton from "./PinButton";
+import ColorMenu from "./ColorMenu";
 
 /**
  * The note's contents and controls, with no frame of its own: the board wraps it
@@ -433,22 +434,6 @@ export default function NoteDetail({
     }
   }
 
-  const colorPicker = (
-    <div className="swatches" role="group" aria-label="Note color">
-      {NOTE_COLORS.map((c) => (
-        <button
-          key={c}
-          type="button"
-          className="swatch"
-          aria-pressed={color === c}
-          aria-label={c}
-          style={{ background: `var(--paper-${c})` }}
-          onClick={() => chooseColor(c)}
-        />
-      ))}
-    </div>
-  );
-
   const viewToggle = (
     <div className="seg" role="group" aria-label="Render as">
       <button className="seg-btn" aria-pressed={!rendered} onClick={() => chooseView(false)}>
@@ -609,7 +594,7 @@ export default function NoteDetail({
               </button>
             )}
 
-            {colorPicker}
+            <ColorMenu color={color} onChoose={chooseColor} />
             {viewToggle}
           </>
         )}

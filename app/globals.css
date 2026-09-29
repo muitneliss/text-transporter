@@ -581,35 +581,6 @@ textarea.field {
   outline-offset: 2px;
 }
 
-/* On paper the swatch sits on its own color, so it gets an ink edge, and the pressed
-   swatch carries a check as well as the ring (a focus ring reuses the outline). */
-.sheet .swatch {
-  position: relative;
-  opacity: 1;
-  border-color: var(--paper-muted);
-}
-
-.sheet .swatch[aria-pressed="true"] {
-  outline-color: var(--paper-ink);
-}
-
-.sheet .swatch[aria-pressed="true"]::after {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid var(--paper-ink);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.sheet .swatch:focus-visible {
-  outline: 3px solid var(--paper-ink);
-  outline-offset: 3px;
-}
-
 /* ---- board toolbar: search + filters ---- */
 .toolbar {
   display: flex;
@@ -923,6 +894,108 @@ textarea.field {
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- note color menu: one toolbar button + a menu-button dropdown ---- */
+.color-btn {
+  gap: 5px;
+  padding: 0 8px;
+  min-width: 44px;
+}
+
+/* The neighbours' faint well border is decoration; this button is identified by its
+   outline as much as by its dot, so on paper it gets the ink-muted edge (>= 3:1). */
+.sheet .btn.color-btn {
+  border-color: var(--paper-muted);
+}
+
+:root .color-btn:focus-visible {
+  outline: 2px solid var(--paper-ink);
+  outline-offset: 2px;
+}
+
+.color-btn[aria-expanded="true"]::before,
+.color-btn[aria-expanded="true"]::after {
+  display: none;
+}
+
+.color-dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  box-sizing: border-box;
+}
+
+.color-caret {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+/* Top-layer popover: `position: fixed` is placed by ColorMenu. It sits on its own
+   surface (not the paper), so its contrast does not depend on the note's color. */
+.color-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 60;
+  min-width: 168px;
+  max-width: calc(100vw - 16px);
+  padding: 4px;
+  overflow: visible;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  font-size: 13.5px;
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.color-name {
+  flex: 1;
+}
+
+.color-check {
+  flex: none;
+}
+
+.color-item:hover,
+.color-item[aria-checked="true"] {
+  background: var(--surface-hover);
+}
+
+:root .color-menu .color-item:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+  background: var(--surface-hover);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .color-item {
+    min-height: 44px;
+  }
 }
 
 /* ---- controls on paper: sheet and the expand reader re-draw the shared
