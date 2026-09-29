@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Note, NoteView } from "@/lib/db";
+import { NOTE_COLORS, type NoteColor } from "@/lib/colors";
 import Markdown from "@/lib/markdown";
 import { copyText } from "@/lib/clipboard";
 import { CopyIcon, CheckIcon, PencilIcon, TrashIcon, ExpandIcon, MinimizeIcon } from "@/lib/icons";
@@ -19,11 +20,14 @@ export default function NoteDetail({
   owner,
   onClose,
   onEditingChange,
+  onColorChange,
 }: {
   note: Note;
   owner: string;
   onClose?: () => void;
   onEditingChange?: (editing: boolean) => void;
+  /** The paper lives on the wrapper; this keeps it in step with the optimistic color. */
+  onColorChange?: (color: string) => void;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -54,6 +58,20 @@ export default function NoteDetail({
     prop: NoteView;
   }>({ inFlight: false, mounted: false, prop: note.view });
   viewRef.current.prop = note.view;
+  const [color, setColorState] = useState<NoteColor>(note.color as NoteColor);
+  /** The wrapper owns the paper, so it hears about every change in the same batch. */
+  const showColor = (c: NoteColor) => {
+    setColorState(c);
+    onColorChange?.(c);
+  };
+  /** Same protocol as `viewRef`, for the paper color. */
+  const colorRef = useRef<{
+    confirmed?: NoteColor;
+    desired?: NoteColor;
+    inFlight: boolean;
+    prop: NoteColor;
+  }>({ inFlight: false, prop: note.color as NoteColor });
+  colorRef.current.prop = note.color as NoteColor;
   const [expanded, setExpanded] = useState(false);
   /** Set only when a save/delete lands on a note someone else already changed.
    *  The draft in `body` is never touched by any of these — only the three
@@ -377,6 +395,60 @@ export default function NoteDetail({
     }
   }
 
+  useEffect(() => {
+    const c = colorRef.current;
+    if (c.inFlight || (c.desired !== undefined && c.desired !== c.confirmed)) return;
+    c.confirmed = c.desired = undefined;
+    showColor(note.color as NoteColor);
+  }, [note.color]);
+
+  /** Optimistic like `chooseView`: recolor now, one PATCH in flight, last click wins. */
+  async function chooseColor(next: NoteColor) {
+    const c = colorRef.current;
+    c.desired = next;
+    showColor(next);
+    if (c.inFlight) return;
+    c.inFlight = true;
+    try {
+      while (c.desired !== undefined && c.desired !== c.confirmed) {
+        const res = await fetch(`/api/notes/${note.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ color: c.desired }),
+        });
+        if (!res.ok) throw new Error();
+        const saved = (await res.json()).note?.color;
+        if (!(NOTE_COLORS as readonly string[]).includes(saved)) throw new Error();
+        c.confirmed = saved;
+      }
+      router.refresh();
+    } catch {
+      c.desired = c.confirmed;
+      if (viewRef.current.mounted) {
+        showColor(c.confirmed ?? c.prop);
+        alert("Could not save the color.");
+      }
+    } finally {
+      c.inFlight = false;
+    }
+  }
+
+  const colorPicker = (
+    <div className="swatches" role="group" aria-label="Note color">
+      {NOTE_COLORS.map((c) => (
+        <button
+          key={c}
+          type="button"
+          className="swatch"
+          aria-pressed={color === c}
+          aria-label={c}
+          style={{ background: `var(--paper-${c})` }}
+          onClick={() => chooseColor(c)}
+        />
+      ))}
+    </div>
+  );
+
   const viewToggle = (
     <div className="seg" role="group" aria-label="Render as">
       <button className="seg-btn" aria-pressed={!rendered} onClick={() => chooseView(false)}>
@@ -537,6 +609,7 @@ export default function NoteDetail({
               </button>
             )}
 
+            {colorPicker}
             {viewToggle}
           </>
         )}
@@ -554,7 +627,7 @@ export default function NoteDetail({
           <dialog
             className="expand"
             ref={dialogRef}
-            style={{ background: `var(--paper-${note.color})` }}
+            style={{ background: `var(--paper-${color})` }}
             aria-label="Expanded note"
             // Escape asks to close here. Clearing the state — rather than letting the
             // dialog close itself and reporting it afterwards — keeps React the single

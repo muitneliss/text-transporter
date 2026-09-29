@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isNoteColor } from "@/lib/colors";
 import { createNote, listNotes, normalizeOwner } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY = 100_000;
-const COLORS = ["yellow", "pink", "blue", "green", "purple"];
 
 export async function GET(req: NextRequest) {
   const owner = normalizeOwner(req.nextUrl.searchParams.get("owner") ?? "");
@@ -23,6 +23,6 @@ export async function POST(req: NextRequest) {
   if (text.length > MAX_BODY)
     return NextResponse.json({ error: "note too long" }, { status: 413 });
 
-  const picked = COLORS.includes(color) ? color : "yellow";
+  const picked = isNoteColor(color) ? color : "yellow";
   return NextResponse.json({ note: createNote(owner, text, picked) }, { status: 201 });
 }

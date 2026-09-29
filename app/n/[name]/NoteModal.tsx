@@ -16,6 +16,7 @@ export default function NoteModal({
 }) {
   const sheet = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
+  const [color, setColor] = useState(note.color);
 
   /** Never throw away a half-written edit without asking. */
   function tryClose() {
@@ -69,7 +70,7 @@ export default function NoteModal({
       <div
         ref={sheet}
         className="sheet"
-        style={{ background: `var(--paper-${note.color})` }}
+        style={{ background: `var(--paper-${color})` }}
         role="dialog"
         aria-modal="true"
         aria-label={note.body.trim().split("\n")[0]}
@@ -92,6 +93,7 @@ export default function NoteModal({
           owner={owner}
           onClose={onClose}
           onEditingChange={setEditing}
+          onColorChange={setColor}
         />
       </div>
     </div>
