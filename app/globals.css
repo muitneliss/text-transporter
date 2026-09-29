@@ -69,17 +69,17 @@
     --accent-contrast: #1c1508;
     --danger: #f2867a;
 
-    --paper-yellow: #50452b;
-    --paper-pink: #55303c;
-    --paper-blue: #2b3e54;
-    --paper-green: #2b462f;
-    --paper-purple: #403357;
+    --paper-yellow: #6b5716;
+    --paper-pink: #7d3348;
+    --paper-blue: #27557f;
+    --paper-green: #286136;
+    --paper-purple: #553f8f;
 
     --paper-ink: #f2ede2;
-    --paper-muted: rgba(242, 237, 226, 0.8);
-    --paper-faint: rgba(242, 237, 226, 0.68);
+    --paper-muted: rgba(242, 237, 226, 0.88);
+    --paper-faint: rgba(242, 237, 226, 0.82);
     --paper-line: rgba(242, 237, 226, 0.2);
-    --paper-link: #8ec2ff;
+    --paper-link: #b0d5ff;
     --paper-well: rgba(255, 255, 255, 0.08);
     --paper-well-border: rgba(255, 255, 255, 0.16);
 
