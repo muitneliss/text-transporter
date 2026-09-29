@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import type { NoteColor } from "./colors";
 
 const g = globalThis as unknown as { __db?: DatabaseSync };
 
@@ -191,6 +192,12 @@ export function setPinned(id: string, pinned: boolean): Note | null {
 /** Like pinning, choosing how a note is displayed is not an edit: body and updated_at stay put. */
 export function setView(id: string, view: NoteView): Note | null {
   db().prepare("UPDATE notes SET view = ? WHERE id = ?").run(view, id);
+  return getNote(id);
+}
+
+/** Like pinning and the view, recoloring is not an edit: body and updated_at stay put. */
+export function setColor(id: string, color: NoteColor): Note | null {
+  db().prepare("UPDATE notes SET color = ? WHERE id = ?").run(color, id);
   return getNote(id);
 }
 

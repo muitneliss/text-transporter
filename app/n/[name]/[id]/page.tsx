@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getNote, normalizeOwner } from "@/lib/db";
-import NoteDetail from "../NoteDetail";
+import PageSheet from "../PageSheet";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +31,7 @@ export default async function NotePage({
 
       {/* The same sheet of paper the board opens in a modal, sized to the page:
           opening a note by URL should not turn it grey. */}
-      <div className="sheet page" style={{ background: `var(--paper-${note.color})` }}>
-        <NoteDetail note={note} owner={owner} />
-      </div>
+      <PageSheet note={note} owner={owner} />
     </main>
   );
 }

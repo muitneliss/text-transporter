@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteNote, getNote, isNoteView, setPinned, setView, updateNoteBody } from "@/lib/db";
+import { isNoteColor } from "@/lib/colors";
+import { deleteNote, getNote, isNoteView, setColor, setPinned, setView, updateNoteBody } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,11 +11,11 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { id } = await params;
-  const { body, pinned, baseBody, view } = await req.json();
+  const { body, pinned, baseBody, view, color } = await req.json();
 
   // Either field may arrive on its own: the editor sends a body, the pin button
   // sends a flag, and neither should be forced to resend the other.
-  if (body === undefined && pinned === undefined && view === undefined)
+  if (body === undefined && pinned === undefined && view === undefined && color === undefined)
     return NextResponse.json({ error: "nothing to update" }, { status: 400 });
 
   // The view is not an edit and must never ride on the conflict-checked body path,
@@ -26,6 +27,13 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (view !== undefined && !isNoteView(view))
     return NextResponse.json({ error: "invalid view" }, { status: 400 });
 
+  // Same reasoning as the view: a recolor is not an edit.
+  if (body !== undefined && color !== undefined)
+    return NextResponse.json({ error: "color cannot be combined with body" }, { status: 400 });
+
+  if (color !== undefined && !isNoteColor(color))
+    return NextResponse.json({ error: "invalid color" }, { status: 400 });
+
   if (!getNote(id)) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   // No body means this is purely a pin/view request: nothing else has to
@@ -33,6 +41,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (body === undefined) {
     if (pinned !== undefined) setPinned(id, Boolean(pinned));
     if (view !== undefined) setView(id, view);
+    if (color !== undefined) setColor(id, color);
     return NextResponse.json({ note: getNote(id) });
   }
 
