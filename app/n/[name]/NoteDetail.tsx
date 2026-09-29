@@ -43,7 +43,7 @@ export default function NoteDetail({
    *  yourself on the next Edit. Always moved together with `latest`. */
   const [latestUpdatedAt, setLatestUpdatedAt] = useState(note.updated_at);
   const [busy, setBusy] = useState(false);
-  const [rendered, setRendered] = useState(false);
+  const [rendered, setRendered] = useState(note.view === "markdown");
   const [expanded, setExpanded] = useState(false);
   /** Set only when a save/delete lands on a note someone else already changed.
    *  The draft in `body` is never touched by any of these — only the three
@@ -320,12 +320,31 @@ export default function NoteDetail({
     }
   }
 
+  /** Optimistic, like the rest of the panel: flip now, remember on the server, and
+   *  put the old choice back if the request fails. */
+  async function chooseView(next: boolean) {
+    if (next === rendered) return;
+    setRendered(next);
+    try {
+      const res = await fetch(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ view: next ? "markdown" : "text" }),
+      });
+      if (!res.ok) throw new Error();
+      router.refresh();
+    } catch {
+      setRendered(!next);
+      alert("Could not save the view.");
+    }
+  }
+
   const viewToggle = (
     <div className="seg" role="group" aria-label="Render as">
-      <button className="seg-btn" aria-pressed={!rendered} onClick={() => setRendered(false)}>
+      <button className="seg-btn" aria-pressed={!rendered} onClick={() => chooseView(false)}>
         Text
       </button>
-      <button className="seg-btn" aria-pressed={rendered} onClick={() => setRendered(true)}>
+      <button className="seg-btn" aria-pressed={rendered} onClick={() => chooseView(true)}>
         Markdown
       </button>
     </div>

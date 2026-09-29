@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteNote, getNote, setPinned, updateNoteBody } from "@/lib/db";
+import { deleteNote, getNote, isNoteView, setPinned, setView, updateNoteBody } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,12 +10,16 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { id } = await params;
-  const { body, pinned, baseBody } = await req.json();
+  const { body, pinned, baseBody, view } = await req.json();
 
   // Either field may arrive on its own: the editor sends a body, the pin button
   // sends a flag, and neither should be forced to resend the other.
-  if (body === undefined && pinned === undefined)
+  if (body === undefined && pinned === undefined && view === undefined)
     return NextResponse.json({ error: "nothing to update" }, { status: 400 });
+
+  // Checked before anything is applied so a bad view can't leave a half-done request.
+  if (view !== undefined && !isNoteView(view))
+    return NextResponse.json({ error: "invalid view" }, { status: 400 });
 
   if (!getNote(id)) return NextResponse.json({ error: "not found" }, { status: 404 });
 
@@ -23,6 +27,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   // to succeed first, so applying it here is already as late as it can be.
   if (body === undefined) {
     if (pinned !== undefined) setPinned(id, Boolean(pinned));
+    if (view !== undefined) setView(id, view);
     return NextResponse.json({ note: getNote(id) });
   }
 
@@ -46,7 +51,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   // A combined request only pins once the body it rode in on actually landed —
   // a rejected or conflicting body must never leave a side effect behind.
   if (pinned !== undefined) setPinned(id, Boolean(pinned));
-  return NextResponse.json({ note: pinned !== undefined ? getNote(id) : result.note });
+  if (view !== undefined) setView(id, view);
+  return NextResponse.json({
+    note: pinned !== undefined || view !== undefined ? getNote(id) : result.note,
+  });
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {

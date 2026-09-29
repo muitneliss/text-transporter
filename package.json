@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "check": "node --experimental-strip-types scripts/highlight.check.ts && node --experimental-strip-types scripts/notes-conflict.check.ts"
+    "check": "node --experimental-strip-types scripts/highlight.check.ts && node --experimental-strip-types scripts/notes-conflict.check.ts && node --experimental-strip-types scripts/note-view.check.ts"
   },
   "dependencies": {
     "next": "^15.1.0",
