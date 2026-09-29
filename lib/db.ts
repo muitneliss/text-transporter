@@ -18,17 +18,32 @@ function open() {
       body       TEXT NOT NULL,
       color      TEXT NOT NULL DEFAULT 'yellow',
       pinned     INTEGER NOT NULL DEFAULT 0,
+      view       TEXT NOT NULL DEFAULT 'text' CHECK (view IN ('text', 'markdown')),
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
   `);
 
-  // Boards that predate pinning already have the table, so CREATE TABLE above is
-  // a no-op for them and the column has to be added in place. Existing rows take
-  // the default and come out unpinned.
-  const columns = db.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
-  if (!columns.some((c) => c.name === "pinned")) {
-    db.exec("ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+  // Boards that predate a column already have the table, so CREATE TABLE above is
+  // a no-op for them and the column has to be added in place; existing rows take
+  // the default (unpinned, 'text'). Two processes can start against the same file
+  // at once, so the check and the ALTERs run under one write lock and the columns
+  // are re-read once it is held — the loser then finds them already there.
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const columns = db.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
+    if (!columns.some((c) => c.name === "pinned")) {
+      db.exec("ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!columns.some((c) => c.name === "view")) {
+      db.exec(
+        "ALTER TABLE notes ADD COLUMN view TEXT NOT NULL DEFAULT 'text' CHECK (view IN ('text', 'markdown'))"
+      );
+    }
+    db.exec("COMMIT");
+  } catch (err) {
+    if (db.isTransaction) db.exec("ROLLBACK");
+    throw err;
   }
 
   // Supersedes notes_owner_idx: every board query now orders by pinned first.
@@ -50,12 +65,19 @@ function db() {
   return (g.__db ??= open());
 }
 
+export type NoteView = "text" | "markdown";
+
+export function isNoteView(v: unknown): v is NoteView {
+  return v === "text" || v === "markdown";
+}
+
 export type Note = {
   id: string;
   owner: string;
   body: string;
   color: string;
   pinned: boolean;
+  view: NoteView;
   created_at: number;
   updated_at: number;
 };
@@ -76,6 +98,7 @@ function toNote(row: Record<string, unknown>): Note {
     body: String(row.body),
     color: String(row.color),
     pinned: Boolean(row.pinned),
+    view: row.view === "markdown" ? "markdown" : "text",
     created_at: Number(row.created_at),
     updated_at: Number(row.updated_at),
   };
@@ -103,6 +126,7 @@ export function createNote(owner: string, body: string, color: string): Note {
     body,
     color,
     pinned: false,
+    view: "text",
     created_at: now,
     updated_at: now,
   };
@@ -161,6 +185,12 @@ export function updateNoteBody(id: string, baseBody: string | undefined, body: s
  */
 export function setPinned(id: string, pinned: boolean): Note | null {
   db().prepare("UPDATE notes SET pinned = ? WHERE id = ?").run(pinned ? 1 : 0, id);
+  return getNote(id);
+}
+
+/** Like pinning, choosing how a note is displayed is not an edit: body and updated_at stay put. */
+export function setView(id: string, view: NoteView): Note | null {
+  db().prepare("UPDATE notes SET view = ? WHERE id = ?").run(view, id);
   return getNote(id);
 }
 

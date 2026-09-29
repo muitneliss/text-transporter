@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Note } from "@/lib/db";
+import type { Note, NoteView } from "@/lib/db";
 import Markdown from "@/lib/markdown";
 import { copyText } from "@/lib/clipboard";
 import { CopyIcon, CheckIcon, PencilIcon, TrashIcon, ExpandIcon, MinimizeIcon } from "@/lib/icons";
@@ -43,7 +43,17 @@ export default function NoteDetail({
    *  yourself on the next Edit. Always moved together with `latest`. */
   const [latestUpdatedAt, setLatestUpdatedAt] = useState(note.updated_at);
   const [busy, setBusy] = useState(false);
-  const [rendered, setRendered] = useState(false);
+  const [rendered, setRendered] = useState(note.view === "markdown");
+  /** `confirmed` is unknown until a save succeeds, so the first click always writes; a fresh
+   *  `note.view` is adopted only while nothing is pending, so external changes heal on refresh. */
+  const viewRef = useRef<{
+    confirmed?: NoteView;
+    desired?: NoteView;
+    inFlight: boolean;
+    mounted: boolean;
+    prop: NoteView;
+  }>({ inFlight: false, mounted: false, prop: note.view });
+  viewRef.current.prop = note.view;
   const [expanded, setExpanded] = useState(false);
   /** Set only when a save/delete lands on a note someone else already changed.
    *  The draft in `body` is never touched by any of these — only the three
@@ -320,12 +330,59 @@ export default function NoteDetail({
     }
   }
 
+  useEffect(() => {
+    const v = viewRef.current;
+    v.mounted = true;
+    return () => {
+      v.mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const v = viewRef.current;
+    if (v.inFlight || (v.desired !== undefined && v.desired !== v.confirmed)) return;
+    v.confirmed = v.desired = undefined;
+    setRendered(note.view === "markdown");
+  }, [note.view]);
+
+  /** Optimistic: flip now, then write. At most one PATCH is in flight and it always
+   *  sends the latest click, so the stored value ends up being the last one chosen. */
+  async function chooseView(next: boolean) {
+    const v = viewRef.current;
+    v.desired = next ? "markdown" : "text";
+    setRendered(next);
+    if (v.inFlight) return;
+    v.inFlight = true;
+    try {
+      while (v.desired !== undefined && v.desired !== v.confirmed) {
+        const res = await fetch(`/api/notes/${note.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ view: v.desired }),
+        });
+        if (!res.ok) throw new Error();
+        const saved = (await res.json()).note?.view;
+        if (saved !== "text" && saved !== "markdown") throw new Error();
+        v.confirmed = saved;
+      }
+      router.refresh();
+    } catch {
+      v.desired = v.confirmed;
+      if (v.mounted) {
+        setRendered((v.confirmed ?? v.prop) === "markdown");
+        alert("Could not save the view.");
+      }
+    } finally {
+      v.inFlight = false;
+    }
+  }
+
   const viewToggle = (
     <div className="seg" role="group" aria-label="Render as">
-      <button className="seg-btn" aria-pressed={!rendered} onClick={() => setRendered(false)}>
+      <button className="seg-btn" aria-pressed={!rendered} onClick={() => chooseView(false)}>
         Text
       </button>
-      <button className="seg-btn" aria-pressed={rendered} onClick={() => setRendered(true)}>
+      <button className="seg-btn" aria-pressed={rendered} onClick={() => chooseView(true)}>
         Markdown
       </button>
     </div>
