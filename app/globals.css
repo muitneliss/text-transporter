@@ -80,14 +80,22 @@
     --paper-faint: rgba(242, 237, 226, 0.82);
     --paper-line: rgba(242, 237, 226, 0.2);
     --paper-link: #b0d5ff;
-    --paper-well: rgba(255, 255, 255, 0.08);
-    --paper-well-border: rgba(255, 255, 255, 0.16);
+    --paper-well: rgba(0, 0, 0, 0.18);
+    --paper-well-border: rgba(0, 0, 0, 0.28);
 
     --paper-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 26px rgba(0, 0, 0, 0.55);
     --paper-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.55), 0 20px 38px rgba(0, 0, 0, 0.6);
 
     --tape-bg: rgba(255, 255, 255, 0.16);
     --tape-border: rgba(255, 255, 255, 0.1);
+  }
+
+  :root .md del {
+    opacity: 1;
+  }
+
+  :root .sheet-close {
+    opacity: 0.8;
   }
 }
 
