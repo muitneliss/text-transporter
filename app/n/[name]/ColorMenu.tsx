@@ -139,8 +139,7 @@ export default function ColorMenu({
           }
         }}
       >
-        <span className="color-dot" style={{ background: `var(--paper-${color})` }} />
-        <span className="color-caret" aria-hidden />
+        <span className="color-rainbow" aria-hidden />
       </button>
       {open && (
         <div
