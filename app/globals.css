@@ -903,12 +903,6 @@ textarea.field {
   min-width: 44px;
 }
 
-/* The neighbours' faint well border is decoration; this button is identified by its
-   outline as much as by its dot, so on paper it gets the ink-muted edge (>= 3:1). */
-.sheet .btn.color-btn {
-  border-color: var(--paper-muted);
-}
-
 :root .color-btn:focus-visible {
   outline: 2px solid var(--paper-ink);
   outline-offset: 2px;
@@ -1046,6 +1040,15 @@ textarea.field {
   background: var(--paper-well-border);
   color: inherit;
   box-shadow: none;
+}
+
+/* The note toolbar on paper: every neutral control (icon buttons, pin, Text/Markdown
+   toggle, color button) shares one ink edge that clears 3:1 on all five papers. The
+   well border stays as is for wells and inline code; the primary button, hover and
+   danger-hover keep their own rules (:where() keeps this at .sheet .btn specificity,
+   and it sits after them). The .expand reader has no toolbar controls to change. */
+.sheet .bar :where(.btn:not(.primary), .seg) {
+  border-color: rgba(28, 28, 28, 0.55);
 }
 
 .sheet .field {
