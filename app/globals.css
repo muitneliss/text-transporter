@@ -69,10 +69,10 @@
     --accent-contrast: #1c1508;
     --danger: #f2867a;
 
-    --paper-yellow: #ecd494;
+    --paper-yellow: #f0d898;
     --paper-pink: #e9afbc;
     --paper-blue: #a8c8e7;
-    --paper-green: #abd4ad;
+    --paper-green: #aed7b0;
     --paper-purple: #c5b4e0;
 
     --paper-ink: #1c1c1c;
@@ -116,6 +116,13 @@
   :root .expand :focus-visible,
   :root .note .pin:focus-visible {
     outline-color: var(--paper-ink);
+  }
+
+  :root .sheet .codeblock-copy:focus-visible,
+  :root .expand .codeblock-copy:focus-visible,
+  :root .sheet .codeblock-pre:focus-visible,
+  :root .expand .codeblock-pre:focus-visible {
+    outline-color: var(--code-ink);
   }
 
   :root .sheet .btn.danger:hover,
