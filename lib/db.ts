@@ -24,18 +24,26 @@ function open() {
     );
   `);
 
-  // Boards that predate pinning already have the table, so CREATE TABLE above is
-  // a no-op for them and the column has to be added in place. Existing rows take
-  // the default and come out unpinned.
-  const columns = db.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
-  if (!columns.some((c) => c.name === "pinned")) {
-    db.exec("ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
-  }
-  // Same story for the remembered Text/Markdown choice: existing rows take 'text'.
-  if (!columns.some((c) => c.name === "view")) {
-    db.exec(
-      "ALTER TABLE notes ADD COLUMN view TEXT NOT NULL DEFAULT 'text' CHECK (view IN ('text', 'markdown'))"
-    );
+  // Boards that predate a column already have the table, so CREATE TABLE above is
+  // a no-op for them and the column has to be added in place; existing rows take
+  // the default (unpinned, 'text'). Two processes can start against the same file
+  // at once, so the check and the ALTERs run under one write lock and the columns
+  // are re-read once it is held — the loser then finds them already there.
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const columns = db.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
+    if (!columns.some((c) => c.name === "pinned")) {
+      db.exec("ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!columns.some((c) => c.name === "view")) {
+      db.exec(
+        "ALTER TABLE notes ADD COLUMN view TEXT NOT NULL DEFAULT 'text' CHECK (view IN ('text', 'markdown'))"
+      );
+    }
+    db.exec("COMMIT");
+  } catch (err) {
+    if (db.isTransaction) db.exec("ROLLBACK");
+    throw err;
   }
 
   // Supersedes notes_owner_idx: every board query now orders by pinned first.
